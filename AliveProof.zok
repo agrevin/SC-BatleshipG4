@@ -1,0 +1,20 @@
+import "hashes/sha256/sha256Padded";
+
+// Take the field represented by u8[100]
+// take the known hash
+// take hash assert its validity
+// assert there is at least one boat alive
+
+def main(u8[100] field, u32[8] prev_hash) {
+    u32 mut res = 0;
+    
+	u32[8] hash = sha256Padded(field);
+    assert(hash == prev_hash);
+    
+    for u32 i in 0..100 {
+            res = res + field[i];
+    }
+
+    assert(res != 0);
+    return;
+}
