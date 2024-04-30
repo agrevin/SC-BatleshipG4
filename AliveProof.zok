@@ -5,7 +5,7 @@ import "hashes/sha256/sha256Padded";
 // take hash assert its validity
 // assert there is at least one boat alive
 
-def main(u8[100] field, u32[8] prev_hash) {
+def main(private u8[100] field, u32[8] prev_hash) {
     u32 mut res = 0;
     
 	u32[8] hash = sha256Padded(field);
