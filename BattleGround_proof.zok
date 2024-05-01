@@ -1,0 +1,55 @@
+import "hashes/sha256/sha256Padded";
+import "utils/casts/u8_from_bits";
+import "utils/casts/u32_to_bits";
+
+// Define the main function for the circuit
+def main(private u32 nonce, private u32[7][3] ships) -> u32[8]{
+
+
+    u8[84] mut pre_hash = [0;84];
+    u32[4][2] mut directions = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+    u32 boardSize = 10;
+    u32 boundary = -1;
+    bool[32] mut bits_nonce = u32_to_bits(nonce);
+
+    u8[4] mut nonce8 = [0;4];
+    for u32 i in 0..4{
+        nonce8[i] = u8_from_bits(bits_nonce[(i*8)..(i*8 + 8)]);
+    }
+    
+    u32[10] mut shipLengths = [5, 4, 3, 2, 1, 1, 1,1,1,1];
+
+    u32 mut j = 0;
+    for u32 i in 0..7{
+        
+        u32 shipX = ships[i][0];
+        u32 shipY = ships[i][1];
+        u32 shipDir = ships[i][2];
+
+
+        assert (shipX < boardSize && shipY < boardSize && shipX > boundary && shipY > boundary);
+
+
+        assert (shipY + shipLengths[j] * directions[shipDir][0] <= boardSize && shipY + shipLengths[j] * directions[shipDir][0] > boundary);
+        assert (shipX + shipLengths[j] * directions[shipDir][1] <= boardSize && shipX + shipLengths[j] * directions[shipDir][1] > boundary);
+        j = j + 1;
+        
+    }
+
+    
+    for u32 i in 0..7{
+        for u32 j in 0..3{
+            bool[32] mut bits = u32_to_bits(ships[i][j]);
+            u8[4] mut nonce8 = [0;4];
+            for u32 l in 0..4{
+                nonce8[l] = u8_from_bits(bits_nonce[(l*8)..(l*8 + 8)]);
+                pre_hash[i*3 + j*4 +l] = nonce8[l];
+            }
+            
+        }
+    }
+
+    u8[88] msg = [...pre_hash,...nonce8];
+    u32[8] hash = sha256Padded(msg);
+    return hash;
+}
