@@ -1,9 +1,9 @@
 import "hashes/sha256/sha256Padded";
-import "./u32_array_to_u8_array"
+import "./u32_array_to_u8_array";
 
-def main(private u8[100] map, private u32 nonce, u32[8] expected_hash) {
+def main(private u8[100] map, private u32[1] nonce, u32[8] expected_hash) {
     u8 mut res = 0;
-    u8[4] mut nonce8 = u32_array_to_u8_array(nonce);
+    u8[4] nonce8 = u32_array_to_u8_array(nonce);
     
     for u32 i in 0..100 {
         res = res + map[i];
