@@ -1,4 +1,5 @@
 import random
+import subprocess
 import json
 import sys
 import socket
@@ -53,12 +54,27 @@ class BatleshipClient:
             print(f'Place your {boat} ({self.boats[boat]} spaces)')
             [x, y, direction] = input('Enter the x(0-9), y(0-9), and direction (0-UP, 1-RIGHT, 2-DOWN, 3-LEFT): ').split()
             _field.append([x, y, direction])
-        #generate random nonce from 0 to 2^32-1
-        _field_nonce = random.randint(0, sys.maxsize)
-        data = {'nonce': self.field_nonce, 'ships': self.field}
+        #generate random nonce from 0 to 2^16-1
+        self.field_nonce = random.randint(0, 2**16 - 1)
+        data = {'nonce': self.field_nonce, 'ships': _field}
         #generate proof from zokrates file
-        print(f'zokrates compute-witness -a {json.dumps(data)}')
-        print(f'zokrates generate-proof')
+        flat_list = [item for sublist in _field for item in sublist]
+        print(flat_list)    
+        compute_witness_command = f'zokrates compute-witness -a {self.field_nonce} {" ".join(map(str, flat_list))}'
+        generate_proof_command = f'zokrates generate-proof'
+
+        print(f"Executing command: {compute_witness_command}")
+        # Execute the commands using subprocess
+        try:
+            # Execute the compute-witness command
+            subprocess.run(compute_witness_command, shell=True, check=True)
+
+            # Execute the generate-proof command
+            subprocess.run(generate_proof_command, shell=True, check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Error executing command: {e}")  
+
+        
 
 
 if __name__ == '__main__':

@@ -5,9 +5,9 @@ import "utils/casts/u32_to_bits";
 // Define the main function for the circuit
 def main(private u32 nonce, private u32[7][3] ships) -> u32[8]{
 
-
+    
     u8[84] mut pre_hash = [0;84];
-    u32[4][2] mut directions = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+    u32[4][2] mut directions = [[0, -1], [1, 0], [0, 1], [-1, 0]];
     u32 boardSize = 10;
     u32 boundary = -1;
     bool[32] mut bits_nonce = u32_to_bits(nonce);
@@ -17,7 +17,7 @@ def main(private u32 nonce, private u32[7][3] ships) -> u32[8]{
         nonce8[i] = u8_from_bits(bits_nonce[(i*8)..(i*8 + 8)]);
     }
     
-    u32[10] mut shipLengths = [5, 4, 3, 2, 1, 1, 1,1,1,1];
+    u32[7] mut shipLengths = [5, 4, 3, 2, 2, 1, 1];
 
     u32 mut j = 0;
     for u32 i in 0..7{
@@ -26,13 +26,13 @@ def main(private u32 nonce, private u32[7][3] ships) -> u32[8]{
         u32 shipY = ships[i][1];
         u32 shipDir = ships[i][2];
 
+        log("shipX is {},shipy is {}",shipX,shipY);
 
-        assert (shipX < boardSize && shipY < boardSize && shipX > boundary && shipY > boundary);
+        assert (shipX < boardSize && shipY < boardSize);
 
-
-        assert (shipY + shipLengths[j] * directions[shipDir][0] <= boardSize && shipY + shipLengths[j] * directions[shipDir][0] > boundary);
-        assert (shipX + shipLengths[j] * directions[shipDir][1] <= boardSize && shipX + shipLengths[j] * directions[shipDir][1] > boundary);
-        j = j + 1;
+        assert (shipX + shipLengths[i] * directions[shipDir][0] <= boardSize && shipX + shipLengths[i] * directions[shipDir][0] >= 0);
+        assert (shipY + shipLengths[i] * directions[shipDir][1] <= boardSize && shipY + shipLengths[i] * directions[shipDir][1] >= 0);
+        
         
     }
 
