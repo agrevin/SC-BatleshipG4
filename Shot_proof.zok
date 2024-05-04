@@ -1,0 +1,62 @@
+import "hashes/sha256/sha256Padded";
+import "utils/casts/u8_from_bits";
+import "utils/casts/u32_to_bits";
+
+
+def main( private u32[8] field_hash, public u32[2] guess, private u32 nonce, private u32[7][3] ships) -> u32[8]
+{
+
+    u32 boardSize = 10;
+    u32[7] mut shipLengths = [5, 4, 3, 2, 2, 1, 1];
+    u32[4][2] mut directions = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+    
+    // Pre hash stack
+    u8[84] mut pre_hash = [0;84];
+
+
+    // 1. Validate the guess is actually valid
+    assert(guess[0] >= 0 && guess[0] < boardSize);
+    assert(guess[1] >= 0 && guess[1] < boardSize);
+
+
+    // Reduce the nonce to 4 bytes
+    bool[32] mut bits_nonce = u32_to_bits(nonce);
+    u8[4] mut nonce8 = [0;4];
+    for u32 i in 0..4{
+        nonce8[i] = u8_from_bits(bits_nonce[(i*8)..(i*8 + 8)]);
+    }
+
+
+    // 2. Validate the inputted ships matches the public hash
+    for u32 i in 0..7{
+        for u32 j in 0..3{
+            bool[32] mut bits = u32_to_bits(ships[i][j]);
+            u8[4] mut nonce8 = [0;4];
+            for u32 l in 0..4{
+                nonce8[l] = u8_from_bits(bits_nonce[(l*8)..(l*8 + 8)]);
+                pre_hash[i*3 + j*4 +l] = nonce8[l];
+            }
+            
+        }
+    }
+
+    u8[88] msg = [...pre_hash,...nonce8];
+    u32[8] hash = sha256Padded(msg);
+    assert(field_hash == hash);
+
+    u32[10][10] mut board = [[0;10];10];
+    for u32 i in 0..7{
+        u32 shipX = ships[i][0];
+        u32 shipY = ships[i][1];
+        u32 shipDir = ships[i][2];
+        for u32 j in 0..shipLengths[i]{
+            board[shipX + j * directions[shipDir][0]][shipY + j * directions[shipDir][1]] = board[shipX + j * directions[shipDir][0]][shipY + j * directions[shipDir][1]] + 1;
+        }
+    }
+    bool y = if board[guess[0]][guess[1]] == 1 { true  } else { false };
+
+    u32[8] mut output = [0;8];
+    return output;
+}
+
+
