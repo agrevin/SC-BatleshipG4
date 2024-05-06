@@ -60,6 +60,7 @@ class BatleshipClient:
         #generate proof from zokrates file
         flat_list = [item for sublist in _field for item in sublist]
         print(flat_list)    
+
         compute_witness_command = f'zokrates compute-witness -a {self.field_nonce} {" ".join(map(str, flat_list))}'
         generate_proof_command = f'zokrates generate-proof'
 
@@ -79,7 +80,7 @@ class BatleshipClient:
 
 if __name__ == '__main__':
     client = BatleshipClient()
-    client.connect()
     data = client.place_boats()
+    client.connect()
     client.send(json.dumps(data))
     client.disconnect()

@@ -5,38 +5,51 @@ import "utils/casts/u32_to_bits";
 // Define the main function for the circuit
 def main(private u32 nonce, private u32[7][3] ships) -> u32[8]{
 
-    
+    // Pre hash stack
     u8[84] mut pre_hash = [0;84];
-    u32[4][2] mut directions = [[0, -1], [1, 0], [0, 1], [-1, 0]];
-    u32 boardSize = 10;
-    u32 boundary = -1;
-    bool[32] mut bits_nonce = u32_to_bits(nonce);
 
+    // Define the directions
+    u32[4][2] mut directions = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+
+    // Define the board size and the ship lengths
+    u32 boardSize = 10;
+    u32[7] mut shipLengths = [5, 4, 3, 2, 2, 1, 1];
+
+    // Reduce the nonce to 4 bytes
+    bool[32] mut bits_nonce = u32_to_bits(nonce);
     u8[4] mut nonce8 = [0;4];
     for u32 i in 0..4{
         nonce8[i] = u8_from_bits(bits_nonce[(i*8)..(i*8 + 8)]);
     }
     
-    u32[7] mut shipLengths = [5, 4, 3, 2, 2, 1, 1];
-
-    u32 mut j = 0;
     for u32 i in 0..7{
         
         u32 shipX = ships[i][0];
         u32 shipY = ships[i][1];
         u32 shipDir = ships[i][2];
 
-        log("shipX is {},shipy is {}",shipX,shipY);
-
-        assert (shipX < boardSize && shipY < boardSize);
-
+        // Check if the ship is within the board
+        assert (shipX < boardSize && shipY < boardSize && shipX >=  0 && shipY >= 0);
         assert (shipX + shipLengths[i] * directions[shipDir][0] <= boardSize && shipX + shipLengths[i] * directions[shipDir][0] >= 0);
         assert (shipY + shipLengths[i] * directions[shipDir][1] <= boardSize && shipY + shipLengths[i] * directions[shipDir][1] >= 0);
-        
-        
     }
 
-    
+    u32[10][10] mut board = [[0;10];10];
+    for u32 i in 0..7{
+        u32 shipX = ships[i][0];
+        u32 shipY = ships[i][1];
+        u32 shipDir = ships[i][2];
+        for u32 j in 0..shipLengths[i]{
+            board[shipX + j * directions[shipDir][0]][shipY + j * directions[shipDir][1]] = board[shipX + j * directions[shipDir][0]][shipY + j * directions[shipDir][1]] + 1;
+        }
+    }
+
+    for u32 i in 0..10{
+        for u32 j in 0..10{
+            assert (board[i][j] <= 1);
+        }
+    }
+
     for u32 i in 0..7{
         for u32 j in 0..3{
             bool[32] mut bits = u32_to_bits(ships[i][j]);
