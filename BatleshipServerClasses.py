@@ -14,7 +14,7 @@ class Game:
         """Constructor"""
         self.number = number
         self.players = []
-        addPlayers(firstPlayerId)   
+        self.addPlayer(firstPlayerId)   
         self.turn = []
         self.turn.append(firstPlayerId)
         self.waveturn = {}      
@@ -24,10 +24,10 @@ class Game:
         """Add a player to the game"""
         newPlayer = Player(player) 
         self.players.append(newPlayer.name)
-        self.waveturn[]
+        self.waveturn[player] = False
 
     
-    def fireShotInGame(self, gametitle: int, shootingPlayer :  int, targettingPlayer: int, shotCoords [2]: int) -> str:
+    def fireShotInGame(self, gametitle: int, shootingPlayer :  int, targettingPlayer: int, shotCoords: list) -> str:
         
         """Verify is players actually exist"""
         if shootingPlayer not in self.players or targettingPlayer not in self.players:
@@ -37,18 +37,15 @@ class Game:
         if shootingPlayer != self.turn[0]:
             return f"In game {self.number}: It is not Shooting Player: {shootingPlayer} turn "
 
-
-
-
-       self.turn.append(self.turn[0])
-       self.turn.pop(0)
-       self.turn.insert(0,targettingPlayer)
+        self.turn.append(self.turn[0])
+        self.turn.pop(0)
+        self.turn.insert(0,targettingPlayer)
        #Print whose turn is next
-       return f"In game {self.number}: Shooting Player: {shootingPlayer} shot Targetting Player: {targettingPlayer} at x: {shotCoords[0]} and y: {shotCoords[1]}"
+        return f"In game {self.number}: Shooting Player: {shootingPlayer} shot Targetting Player: {targettingPlayer} at x: {shotCoords[0]} and y: {shotCoords[1]}"
 
         
 
-    def reportShotInGame(self, reportingPlayer: int, shootingPlayer: int, shotCoords [2]: int, result: str)-> str :
+    def reportShotInGame(self, reportingPlayer: int, shootingPlayer: int, shotCoords: list, result: str)-> str :
        if reportingPlayer not in self.players or shootingPlayer not in self.players:
             return f"In game {self.number}: Reporting Player {reportingPlayer} or Shooting Player {shootingPlayer} does not exist in the game"
         
@@ -100,28 +97,28 @@ class BatleshipGames:
             return self.games[gametitle].addPlayer(player)
 
 
-    def fireShot(self, gametitle: int, shootingPlayer :  int, targettingPlayer: int, shotCoords [2]: int)-> str :
+    def fireShot(self, gametitle: int, shootingPlayer :  int, targettingPlayer: int, shotCoords: list)-> str :
         """Fire a shot"""
         
-        if gamtitle in self.games:
+        if gametitle in self.games:
             return self.games[gametitle].fireShotInGame(gametitle, shootingPlayer,targettingPlayer, shotCoords)
 
         
-    def reportShot(self, gametitle: int, reportingPlayer: int, shootingPlayer: int, shootCoords [2]: int, result: str)-> str :
+    def reportShot(self, gametitle: int, reportingPlayer: int, shootingPlayer: int, shootCoords: list, result: str)-> str :
         
         """Report shot"""
 
-        if gamtitle in self.games:
-            return self.games[gametitle].reportShotInGame(gametitle, reportingPlayer,shootingPlayer,shootCoords,resutl)
+        if gametitle in self.games:
+            return self.games[gametitle].reportShotInGame(gametitle, reportingPlayer,shootingPlayer,shootCoords, result)
         
      
     def waveTurn(self, gametitle: int, waveTurnPlayer: int)-> str:
-        if gamtitle in self.games:
+        if gametitle in self.games:
            return self.games[gametitle].waveTurnInGame(waveTurnPlayer)
 
         
     def claimVictory(self, gametitle: int, claimVictoryPlayer: int)-> str:
-        if gamtitle in self.games:
+        if gametitle in self.games:
            return self.games[gametitle].checkVcitoryClaim(claimVictoryPlayer)
         
         
