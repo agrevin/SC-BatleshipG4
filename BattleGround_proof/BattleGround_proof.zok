@@ -3,7 +3,7 @@ import "utils/casts/u8_from_bits";
 import "utils/casts/u32_to_bits";
 
 // Define the main function for the circuit
-def main(private u32 nonce, private u8[7][3] ships,) -> (u32[8],u8[100]){
+def main(private u32 nonce, private u32[7][3] ships) -> u32[8]{
 
     // Pre hash stack
     u8[100] mut pre_hash = [0;100];
@@ -50,7 +50,7 @@ def main(private u32 nonce, private u8[7][3] ships,) -> (u32[8],u8[100]){
 
     pre_hash = board;
 
-    u8[88] msg = [...pre_hash,...nonce8];
+    u8[104] msg = [...pre_hash,...nonce8];
     u32[8] hash = sha256Padded(msg);
-    return (hash,board);
+    return hash;
 }
