@@ -31,7 +31,7 @@ class BatleshipServer:
         """Handle different types of notes"""
         note_type, *args = note.split(',')
         note_type.lower()
-        if note_type == "create game":
+        if note_type == "create":
             
             note_data = {
                 "sender_id": args[0],
@@ -39,8 +39,15 @@ class BatleshipServer:
                 "fleet_position": args[2:]
             }
             print("Received Create Game note:", note_data)
+            
+            #verify battleground proof
 
-        elif note_type == "join game":
+            
+            #if correct 
+
+            self.battleship_games.createGame(game_id)
+            
+        elif note_type == "join":
 
             note_data = {
                 "sender_id": args[0],
@@ -83,7 +90,7 @@ class BatleshipServer:
             }
             print("Received Wave Turn note:", note_data)
             
-        elif note_type == "claim victory":
+        elif note_type == "claim":
             # Handle Claim Victory note
             note_data = {
                 "type": note_type,
