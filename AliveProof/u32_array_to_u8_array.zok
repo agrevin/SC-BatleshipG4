@@ -1,0 +1,16 @@
+import "utils/casts/u32_array_to_bool_array" as u32_array_to_bool_array;
+from "utils/casts/u8_from_bits" import u8_from_bits;
+
+def main<N,P>(u32[N] a) -> u8[P] {
+    assert(P == N * 4);
+    u32 mut M = N * 32;
+    bool[M] mut bits = u32_array_to_bool_array(a);
+    
+    u8[P] mut res = [0;P];
+    
+    for u32 i in 0..P {
+        res[i] = u8_from_bits(bits[8 * i..8 * (i + 1)]);
+    }
+
+    return res;
+}
