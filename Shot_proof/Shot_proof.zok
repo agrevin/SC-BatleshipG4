@@ -3,11 +3,12 @@ import "utils/casts/u8_from_bits";
 import "utils/casts/u32_to_bits";
 
 
-def main( private u32[8] field_hash, public u8[2] guess, private u32 nonce, private u8[100] board) -> (u32[8],u8[100])
+def main( private u32[8] field_hash, public u32[2] guess, private u32 nonce, private u8[100] board) -> u32[8]
 {
     // Pre hash stack
     u8[100] mut pre_hash = [0;100];
 
+    u32 boardSize = 10;
 
     // 1. Validate the guess is actually valid
     assert(guess[0] >= 0 && guess[0] < boardSize);
@@ -32,16 +33,16 @@ def main( private u32[8] field_hash, public u8[2] guess, private u32 nonce, priv
     
     // 3. Check if the guess is a hit or a miss
 
-    bool y = if board_temp[guess[0]*10 + guess[1]] == 1 { true  } else { false };
+    bool y = if board_temp[guess[0]*10 + guess[1]] == 1 { true } else { false };
 
     // 4. Update the board
-    bool z = if y {board_temp[guess[0]*10 + guess[1]] = 0 } else {false}
+    board_temp[guess[0]*10 + guess[1]] = if y {1} else {0};
 
     u8[104] msg_2 = [...board_temp,...nonce8];
 
     u32[8] hash_2 = sha256Padded(msg_2);
 
-    return (hash_2,board_temp);
+    return hash_2;
 }
 
 
