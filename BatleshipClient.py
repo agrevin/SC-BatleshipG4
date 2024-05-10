@@ -1,4 +1,5 @@
 import random
+import os
 import subprocess
 import json
 import sys
@@ -17,10 +18,11 @@ class Field:
 class BatleshipClient:
     """Class for a Batleship client"""
 
-    def __init__(self, host: str = 'localhost', port: int = 12345):
+    def __init__(self, host: str = 'localhost', port: int = 12345, game_id: str = ''):
         """Constructor"""
         self.host = host
         self.port = port
+        
         self.socket = None
         self.connected = False
         self.boats = {'Carrier': 5,
@@ -31,6 +33,16 @@ class BatleshipClient:
                       'Submarine1': 1,
                       'Submarine2': 1}
         self.field: Field = None
+        self.game_id: str = game_id
+        self.player_id: int = None
+        self.proof_dir: str = f"{os.getcwd()}/{game_id}{random.randint(0, 2**16 - 1)}"
+        self.field_proof_dir = f"{self.proof_dir}/field"
+        self.alive_proof_dir = f"{self.proof_dir}/alive"
+        self.shot_proof_dir = f"{self.proof_dir}/shot"
+        os.makedirs(self.proof_dir, exist_ok=True)
+        os.makedirs(self.field_proof_dir, exist_ok=True)
+        os.makedirs(self.alive_proof_dir, exist_ok=True)
+        os.makedirs(self.shot_proof_dir, exist_ok=True)
 
     def connect(self):
         """Connect to the server"""
@@ -59,28 +71,51 @@ class BatleshipClient:
         data = {'nonce': self.field_nonce, 'ships': _field}
         #generate proof from zokrates file
         flat_list = [item for sublist in _field for item in sublist]
-        print(flat_list)    
-
-        compute_witness_command = f'zokrates compute-witness -a {self.field_nonce} {" ".join(map(str, flat_list))}'
-        generate_proof_command = f'zokrates generate-proof'
+        zokdir = os.getcwd() + '/BattleGround_proof'
+        compute_witness_command = f'zokrates compute-witness -s {zokdir}/abi.json -i {zokdir}/out -o {self.field_proof_dir}/witness -a {self.field_nonce} {" ".join(map(str, flat_list))}'
+        generate_proof_command = f'zokrates generate-proof -i {zokdir}/out -j {self.field_proof_dir}/proof.json -p {zokdir}/proving.key -w {self.field_proof_dir}/witness'
 
         print(f"Executing command: {compute_witness_command}")
         # Execute the commands using subprocess
         try:
             # Execute the compute-witness command
-            subprocess.run(compute_witness_command, shell=True, check=True)
-
-            # Execute the generate-proof command
-            subprocess.run(generate_proof_command, shell=True, check=True)
+            p = subprocess.run(compute_witness_command, shell=True, check=True, capture_output=True)
         except subprocess.CalledProcessError as e:
             print(f"Error executing command: {e}")  
+            
+        print(f"Output: {p.stdout.decode()}")
+    
+        print(f"Executing command: {generate_proof_command}")
+        # Execute the commands using subprocess
+        try:
+            # Execute the generate-proof command
+            p = subprocess.run(generate_proof_command, shell=True, check=True, capture_output=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Error executing command: {e}")  
+            
+        print(f"Output: {p.stdout.decode()}")
 
-        
+    def join_game(self, game_id: str):
+        """Join a game"""
+        self.game_id = game_id
+        self.connect()
+        self.place_boats()
+        with open(f'{self.field_proof_dir}/proof.json') as f:
+            proof = json.load(f)
+
+        self.send(f'join,{game_id},{proof["proof"]}')
+
+    def clean_dir(self):
+        """Remove the proof directory"""
+        os.system(f'rm -rf {self.proof_dir}')
 
 
 if __name__ == '__main__':
-    client = BatleshipClient()
-    data = client.place_boats()
-    client.connect()
-    client.send(json.dumps(data))
+    print("Choose a game to join:")
+    game_id = input()
+    client = BatleshipClient(game_id=game_id)
+    client.join_game(game_id)
+    client.send(f"Hello from the client!")
     client.disconnect()
+    input()
+    client.clean_dir()
