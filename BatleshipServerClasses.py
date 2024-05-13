@@ -14,10 +14,12 @@ class Game:
         """Constructor"""
         self.number = number
         self.players = []
-        self.addPlayer(firstPlayerId)   
+        newPlayer = Player(firstPlayerId) 
+        self.players.append(newPlayer.name)
         self.turn = []
         self.turn.append(firstPlayerId)
-        self.waveturn = {}      
+        self.waveturn = {} 
+        self.waveturn[firstPlayerId] = False     
 
   
     def addPlayer(self, player: int):
@@ -25,9 +27,10 @@ class Game:
         newPlayer = Player(player) 
         self.players.append(newPlayer.name)
         self.waveturn[player] = False
+        print(self.players)
 
     
-    def fireShotInGame(self, gametitle: int, shootingPlayer :  int, targettingPlayer: int, shotCoords: list) -> str:
+    def fireShotInGame(self, shootingPlayer :  int, targettingPlayer: int, shotCoords: list) -> str:
         
         """Verify is players actually exist"""
         if shootingPlayer not in self.players or targettingPlayer not in self.players:
@@ -52,7 +55,7 @@ class Game:
        if reportingPlayer != self.turn[0]:
             return f"In game {self.number}: It is not Reporting Player: {shootingPlayer} turn " 
 
-       return f"In game {self.number}: Reporting Player: {shootingPlayer} is reporting a {result} at x: {shotCoords[0]} and y: {shotCoords[1]} from shot from Shooting Player{shootingPlayer}"
+       return f"In game {self.number}: Reporting Player: {shootingPlayer} is reporting a {result} at x: {shotCoords[0]} and y: {shotCoords[1]} from shot from Shooting Player: {shootingPlayer}"
 
     
     def waveTurnInGame(self, waveTurnPlayer: int)-> str:
@@ -81,10 +84,10 @@ class BatleshipGames:
         
 
 
-    def createGame(self, gametitle: int) -> str:
+    def createGame(self, gametitle: int, player : int ) -> str:
         """Create a new game""" 
         # nao esquecer sender id
-        self.games[gametitle] = Game(gametitle)
+        self.games[gametitle] = Game(gametitle,player)
         
         return 
 
@@ -101,7 +104,7 @@ class BatleshipGames:
         """Fire a shot"""
         
         if gametitle in self.games:
-            return self.games[gametitle].fireShotInGame(gametitle, shootingPlayer,targettingPlayer, shotCoords)
+            return self.games[gametitle].fireShotInGame(shootingPlayer,targettingPlayer, shotCoords)
 
         
     def reportShot(self, gametitle: int, reportingPlayer: int, shootingPlayer: int, shootCoords: list, result: str)-> str :
@@ -109,7 +112,7 @@ class BatleshipGames:
         """Report shot"""
 
         if gametitle in self.games:
-            return self.games[gametitle].reportShotInGame(gametitle, reportingPlayer,shootingPlayer,shootCoords, result)
+            return self.games[gametitle].reportShotInGame(reportingPlayer,shootingPlayer,shootCoords, result)
         
      
     def waveTurn(self, gametitle: int, waveTurnPlayer: int)-> str:
