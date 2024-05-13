@@ -19,7 +19,9 @@ class Game:
         self.turn = []
         self.turn.append(firstPlayerId)
         self.waveturn = {} 
-        self.waveturn[firstPlayerId] = False     
+        self.waveturn[firstPlayerId] = False
+        self.hasReported = {}
+        self.hasReported[firstPlayerId] = True
 
   
     def addPlayer(self, player: int):
@@ -27,6 +29,7 @@ class Game:
         newPlayer = Player(player) 
         self.players.append(newPlayer.name)
         self.waveturn[player] = False
+        self.turn.append(player)
         print(self.players)
 
     
@@ -40,8 +43,21 @@ class Game:
         if shootingPlayer != self.turn[0]:
             return f"In game {self.number}: It is not Shooting Player: {shootingPlayer} turn "
 
+        """Verify if shooting player is not shooting itself"""
+        if shootingPlayer == targettingPlayer:
+            return f"In game {self.number}: Shooting Player: {shootingPlayer} cannot shoot itself"
+        
+        """Verify if shooting player has reported the last shot"""
+        if self.hasReported[shootingPlayer] == False:
+            return f"In game {self.number}: Shooting Player: {shootingPlayer} has not reported the last shot"
+        
+        self.hasReported[shootingPlayer] = True
+        self.hasReported[targettingPlayer] = False
+
+
         self.turn.append(self.turn[0])
         self.turn.pop(0)
+        self.turn.remove(targettingPlayer)
         self.turn.insert(0,targettingPlayer)
        #Print whose turn is next
         return f"In game {self.number}: Shooting Player: {shootingPlayer} shot Targetting Player: {targettingPlayer} at x: {shotCoords[0]} and y: {shotCoords[1]}"
@@ -49,13 +65,16 @@ class Game:
         
 
     def reportShotInGame(self, reportingPlayer: int, shootingPlayer: int, shotCoords: list, result: str)-> str :
-       if reportingPlayer not in self.players or shootingPlayer not in self.players:
+        if reportingPlayer not in self.players or shootingPlayer not in self.players:
             return f"In game {self.number}: Reporting Player {reportingPlayer} or Shooting Player {shootingPlayer} does not exist in the game"
         
-       if reportingPlayer != self.turn[0]:
+        if reportingPlayer != self.turn[0]:
             return f"In game {self.number}: It is not Reporting Player: {shootingPlayer} turn " 
 
-       return f"In game {self.number}: Reporting Player: {shootingPlayer} is reporting a {result} at x: {shotCoords[0]} and y: {shotCoords[1]} from shot from Shooting Player: {shootingPlayer}"
+        if self.hasReported[reportingPlayer] == True:   
+            return f"In game {self.number}: Reporting Player: {reportingPlayer} has already reported the last shot"
+    
+        return f"In game {self.number}: Reporting Player: {shootingPlayer} is reporting a {result} at x: {shotCoords[0]} and y: {shotCoords[1]} from shot from Shooting Player: {shootingPlayer}"
 
     
     def waveTurnInGame(self, waveTurnPlayer: int)-> str:
