@@ -141,7 +141,7 @@ class BatleshipClient:
         print("Do you wish to see game's players?")
         see_players = input("1. Yes\n2. No\n")
         if see_players == '1':
-            self.send(f'players${self.game_id}')
+            self.send(f'requestPlayer${self.game_id}${self.player_id}')
         
         target = input('Enter the target player id: ')
         x, y = input('Enter the x(0-9), y(0-9): ').split()
@@ -152,7 +152,7 @@ class BatleshipClient:
         print("Do you wish to see game's players?")
         see_players = input("1. Yes\n2. No\n")
         if see_players == '1':
-            self.send(f'players${self.game_id}')
+            self.send(f'requestPlayer${self.game_id}${self.player_id}')
         
         target = input('Enter the target player id: ')
         x, y = input('Enter the x(0-9), y(0-9): ').split()
@@ -163,6 +163,11 @@ class BatleshipClient:
         """Claim victory"""
         self.send(f'claim${self.game_id}${self.player_id}$FaltaAProof')
 
+    def see_Players(self):
+        self.send(f'requestPlayer${self.game_id}${self.player_id}')
+
+    def see_Turn(self):
+        self.send(f'requestTurn${self.game_id}${self.player_id}')
 
     def clean_dir(self):
         """Remove the proof directory"""
@@ -173,7 +178,7 @@ class BatleshipClient:
         
         while(True):
             print("Decide action:")
-            action = input("1. Wave turn\n2. Fire shot\n3. Report shot\n4. Claim victory\n5. Exit\n")
+            action = input("1. Wave turn\n2. Fire shot\n3. Report shot\n4. Claim victory\n5. See Players in your game\n6. See whose turn is it\n7. Exit\n")
             if action == '1':
                 self.wave_turn()
             elif action == '2':
@@ -183,6 +188,10 @@ class BatleshipClient:
             elif action == '4':
                 self.claim_victory()
             elif action == '5':
+                self.see_Players()
+            elif action == '6':
+                self.see_Turn()
+            elif action == '7':
                 self.disconnect()
                 self.clean_dir()
                 break

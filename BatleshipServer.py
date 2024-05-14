@@ -30,7 +30,10 @@ class BatleshipServer:
             "fire": self.note_type_fire,
             "report": self.note_type_report,
             "wave": self.note_type_wave,
-            "claim": self.note_type_claim
+            "claim": self.note_type_claim,
+            "requestPlayer": self.note_type_requestPlayer,
+            "requestTurn": self.note_type_requestTurn,
+            "requestGamesNames": self.note_type_requestGamesNames
         }
 
         #Directory stuff
@@ -123,14 +126,25 @@ class BatleshipServer:
         print(self.battleship_games.claimVictory(note_data["game_id"],note_data["sender_id"]))
         # Perform actions for Claim Victory note
 
+    def note_type_requestPlayer(self, args: list):
+        note_data = {
+                "game_id": args[0],
+                "sender_id": args[1]
+            }
+            
+        print(self.battleship_games.requestPlayer(note_data["game_id"]))
 
-    
+    def note_type_requestTurn(self, args: list):
+        note_data = {
+                "game_id": args[0],
+                "sender_id": args[1]
+            }
+            
+        print(self.battleship_games.requestTurn(note_data["game_id"]))
 
     def handle_note(self, note):
         """Handle different types of notes"""
         note_type, *args = note.split('$')
-        for arg in args:
-            print(arg)
         note_type.lower()
         note_type_handler = self.note_types.get(note_type)
 
@@ -139,6 +153,8 @@ class BatleshipServer:
         else:
           print("Unknown note type:", note_type)  
 
+    def note_type_requestGamesNames(self, args: list):
+        print(self.battleship_games.games.keys())
 
         #if note_type == "create":
         #    
