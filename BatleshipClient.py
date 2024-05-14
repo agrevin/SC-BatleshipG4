@@ -175,29 +175,51 @@ class BatleshipClient:
 
     def start_game(self):
         """Start the game"""
-        
+
+        action_dispatcher = {
+            "1": self.wave_turn,
+            "2": self.fire_shot,
+            "3": self.report_shot,
+            "4": self.claim_victory,
+            "5": self.see_Players,
+            "6": self.see_Turn,
+            "7": lambda: (self.disconnect(), self.clean_dir(), exit())
+        }
+
         while(True):
             print("Decide action:")
             action = input("1. Wave turn\n2. Fire shot\n3. Report shot\n4. Claim victory\n5. See Players in your game\n6. See whose turn is it\n7. Exit\n")
-            if action == '1':
-                self.wave_turn()
-            elif action == '2':
-                self.fire_shot()
-            elif action == '3':
-                self.report_shot()
-            elif action == '4':
-                self.claim_victory()
-            elif action == '5':
-                self.see_Players()
-            elif action == '6':
-                self.see_Turn()
-            elif action == '7':
-                self.disconnect()
-                self.clean_dir()
-                break
+
+            result = action_dispatcher.get(action)
+            if result is not None:
+                result()
             else:
                 print("Invalid action selected")
                 continue
+
+        
+        #while(True):
+        #    print("Decide action:")
+        #    action = input("1. Wave turn\n2. Fire shot\n3. Report shot\n4. Claim victory\n5. See Players in your game\n6. See whose turn is it\n7. Exit\n")
+        #    if action == '1':
+        #        self.wave_turn()
+        #    elif action == '2':
+        #        self.fire_shot()
+        #    elif action == '3':
+        #        self.report_shot()
+        #    elif action == '4':
+        #        self.claim_victory()
+        #    elif action == '5':
+        #        self.see_Players()
+        #    elif action == '6':
+        #        self.see_Turn()
+        #    elif action == '7':
+        #        self.disconnect()
+        #        self.clean_dir()
+        #        break
+        #    else:
+        #        print("Invalid action selected")
+        #        continue
 
 
 if __name__ == '__main__':
