@@ -30,12 +30,16 @@ class BatleshipClient:
         self.field: list = [] # can be changed to class
         self.game_id: str = game_id
         self.player_id =  player_id
+        self.players_in_game = {}
         self.hash = []
 
+        if self.game_id != -1:
+            self.create_direct()
+        self.connect()
 
+    def create_direct(self):
 
-        #Directory stuff
-        self.proof_dir: str = f"{os.getcwd()}/{game_id}{random.randint(0, 2**16 - 1)}"
+        self.proof_dir: str = f"{os.getcwd()}/{self.game_id}{random.randint(0, 2**16 - 1)}"
         self.field_proof_dir = f"{self.proof_dir}/field"
         self.alive_proof_dir = f"{self.proof_dir}/alive"
         self.shot_proof_dir = f"{self.proof_dir}/shot"
@@ -43,6 +47,7 @@ class BatleshipClient:
         os.makedirs(self.field_proof_dir, exist_ok=True)
         os.makedirs(self.alive_proof_dir, exist_ok=True)
         os.makedirs(self.shot_proof_dir, exist_ok=True)
+    
 
     def connect(self):
         """Connect to the server"""
@@ -129,8 +134,10 @@ class BatleshipClient:
         self.battleGoundProof()
         with open(f'{self.field_proof_dir}/proof.json') as f:
             proof = json.load(f)
-        self.connect()
+        print(proof)
         self.send(f'{label}${self.player_id}${game_id}${proof}')
+
+
 
     def wave_turn(self):
         """Wave the turn"""
@@ -154,7 +161,7 @@ class BatleshipClient:
         if see_players == '1':
             self.send(f'requestPlayer${self.game_id}${self.player_id}')
         
-        target = input('Enter the target player id: ')
+        target = input('Enter the attacker player id: ')
         x, y = input('Enter the x(0-9), y(0-9): ').split()
         result = input('Enter the result (HIT, MISS, SUNK): ')
         self.send(f'report${self.game_id}${self.player_id}${target}${x}${y}${result}$FaltaAProof')
@@ -165,10 +172,33 @@ class BatleshipClient:
 
     def see_Players(self):
         self.send(f'requestPlayer${self.game_id}${self.player_id}')
+        print("Do you wish to add the info of a new player?")
+        add_info = input("1. Yes\n2. No\n")
+        if add_info == '1':
+            print("Input the Players id")
+            players_id = input()
+            self.players_in_game[players_id] = 0
 
     def see_Turn(self):
         self.send(f'requestTurn${self.game_id}${self.player_id}')
+    
+    def increase_shot_counter(self):
+        print("To what player do you wish to increase the shot counter")
+        player_to_increase = input()
+        if player_to_increase not in self.players_in_game:
+            print("That player isnt currently in your game")
+        
+        self.players_in_game[player_to_increase] = self.players_in_game[player_to_increase] + 1
+    
+    def add_players_info(self):
+        print("What players info do you wish to add")
+        player_new_info = input()
+        self.players_in_game[player_new_info] = 0
 
+    def see_my_game_players_info(self):
+        print("Your game player info is:\n")
+        for key, value in self.players_in_game.items():
+            print(f"Player '{key}' as received '{value}' shots.")
     def clean_dir(self):
         """Remove the proof directory"""
         os.system(f'rm -rf {self.proof_dir}')
@@ -183,12 +213,15 @@ class BatleshipClient:
             "4": self.claim_victory,
             "5": self.see_Players,
             "6": self.see_Turn,
-            "7": lambda: (self.disconnect(), self.clean_dir(), exit())
+            "7": self.increase_shot_counter,
+            "8": self.add_players_info,
+            "9": self.see_my_game_players_info,
+            "10": lambda: (self.disconnect(), self.clean_dir(), exit())
         }
 
         while(True):
             print("Decide action:")
-            action = input("1. Wave turn\n2. Fire shot\n3. Report shot\n4. Claim victory\n5. See Players in your game\n6. See whose turn is it\n7. Exit\n")
+            action = input("1. Wave turn\n2. Fire shot\n3. Report shot\n4. Claim victory\n5. See Players in your game\n6. See whose turn is it\n7. Increase shot counter\n8. Add a player info\n9. See your game players status\n10. Exit\n")
 
             result = action_dispatcher.get(action)
             if result is not None:
@@ -196,30 +229,6 @@ class BatleshipClient:
             else:
                 print("Invalid action selected")
                 continue
-
-        
-        #while(True):
-        #    print("Decide action:")
-        #    action = input("1. Wave turn\n2. Fire shot\n3. Report shot\n4. Claim victory\n5. See Players in your game\n6. See whose turn is it\n7. Exit\n")
-        #    if action == '1':
-        #        self.wave_turn()
-        #    elif action == '2':
-        #        self.fire_shot()
-        #    elif action == '3':
-        #        self.report_shot()
-        #    elif action == '4':
-        #        self.claim_victory()
-        #    elif action == '5':
-        #        self.see_Players()
-        #    elif action == '6':
-        #        self.see_Turn()
-        #    elif action == '7':
-        #        self.disconnect()
-        #        self.clean_dir()
-        #        break
-        #    else:
-        #        print("Invalid action selected")
-        #        continue
 
 
 if __name__ == '__main__':
@@ -235,12 +244,19 @@ if __name__ == '__main__':
         client.start_game()
 
     elif game_mode == '2':
-        print("Choose a game id:")
-        game_id = input()
         print("Choose your id:")
         player_id = input()
-        client = BatleshipClient(game_id=game_id, player_id=player_id)
+        client = BatleshipClient(game_id=-1, player_id=player_id)
+        print("Do you wish to see the games in progress?")
+        see_games = input("1. Yes\n2. No\n")
+        if see_games == '1':
+            client.send(f'requestGamesNames')
+        print("Choose a game id:")
+        game_id = input()
+        client.game_id  = game_id
         client.join_game("join",game_id)
+        #To Do: interrupt if error in joining.
+        client.create_direct()
         client.start_game()
     else:
         print("Invalid game mode selected")

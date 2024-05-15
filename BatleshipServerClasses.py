@@ -24,13 +24,14 @@ class Game:
         self.hasReported[firstPlayerId] = True
 
   
-    def addPlayer(self, player: int):
+    def addPlayer(self, player: int)->str:
         """Add a player to the game"""
         newPlayer = Player(player) 
         self.players.append(newPlayer.name)
         self.waveturn[player] = False
         self.turn.append(player)
-        print(self.players)
+        return f"In the game '{self.title}': the Player: '{newPlayer.name}' has joined."
+
 
     
     def fireShotInGame(self, shootingPlayer :  int, targettingPlayer: int, shotCoords: list) -> str:
@@ -65,6 +66,7 @@ class Game:
         
 
     def reportShotInGame(self, reportingPlayer: int, shootingPlayer: int, shotCoords: list, result: str)-> str :
+
         if reportingPlayer not in self.players or shootingPlayer not in self.players:
             return f"In the game {self.title}: Reporting Player {reportingPlayer} or Shooting Player {shootingPlayer} does not exist in the game"
         
@@ -74,7 +76,7 @@ class Game:
         if self.hasReported[reportingPlayer] == True:   
             return f"In the game {self.title}: Reporting Player: {reportingPlayer} has already reported the last shot"
     
-        return f"In the game {self.title}: Reporting Player: {shootingPlayer} is reporting a {result} at x: {shotCoords[0]} and y: {shotCoords[1]} from shot from Shooting Player: {shootingPlayer}"
+        return f"In the game {self.title}: Reporting Player: {reportingPlayer} is reporting a {result} at x: {shotCoords[0]} and y: {shotCoords[1]} from shot from Shooting Player: {shootingPlayer}"
 
     
     def waveTurnInGame(self, waveTurnPlayer: int)-> str:
@@ -83,6 +85,11 @@ class Game:
 
         if waveTurnPlayer != self.turn[0]:
                 return f"In the game {self.title}: Player: {waveTurnPlayer} cannot wave its turn because it is not their turn."
+            
+        if self.hasReported[waveTurnPlayer] == False:   
+            return f"In the game {self.title}: WaveTurning Player: {reportingPlayer} cannot wave its turn until it has reported the shot"
+
+        print(f"Player: '{waveTurnPlayer}' has decided to wave its turn")
         self.turn.append(self.turn[0])
         self.turn.pop(0)
         self.waveturn[waveTurnPlayer] = True
@@ -108,7 +115,7 @@ class BatleshipGames:
         # nao esquecer sender id
         self.games[gametitle] = Game(gametitle,player)
         
-        return 
+        return f"A new game called '{gametitle}' was created."
 
 
 
@@ -117,6 +124,8 @@ class BatleshipGames:
         """Join a game""" 
         if gametitle in self.games:
             return self.games[gametitle].addPlayer(player)
+
+        return f"Game '{gametitle}' does not exist."
 
 
     def fireShot(self, gametitle: str, shootingPlayer :  int, targettingPlayer: int, shotCoords: list)-> str :
@@ -147,7 +156,7 @@ class BatleshipGames:
         
     def requestPlayer(self, gametitle: str)-> str:
         """Request player"""
-        return f"The players in game the {gametitle} are : {self.games[gametitle].players}"
+        return f"The players in the game {gametitle} are : {self.games[gametitle].players}"
         
     def requestTurn(self, gametitle: str)-> str:
         """Request player"""

@@ -62,7 +62,7 @@ class BatleshipServer:
 
     def receive(self):
         """Receive a message from the client"""
-        return self.socket.recv(1024).decode()
+        return self.socket.recv(10240).decode()
     
 
     def note_type_create(self, args: list):
@@ -72,9 +72,18 @@ class BatleshipServer:
             "fleet_position": args[2]
         }
 
+        
 
-        #if Correct
-        self.battleship_games.createGame(note_data["game_id"],note_data["sender_id"])
+        with open(f'{self.temp_dir}/proof.json','w') as f:
+            proof = json.dump(note_data["fleet_position"],f,indent = 4)
+        proof_josn_str = ""
+        for ch in note_data["fleet_position"]:
+            if ch == "\"":
+                proof_josn_str + "\'"
+            else:
+                proof_josn_str + ch
+        print(proof_josn_str)
+        print(self.battleship_games.createGame(note_data["game_id"],note_data["sender_id"]))
 
     def note_type_join(self, args: list):
         note_data = {
@@ -82,8 +91,10 @@ class BatleshipServer:
                 "game_id": args[1],
                 "fleet_proof": args[2]
             }
-
-        self.battleship_games.joinGame(note_data["game_id"],note_data["sender_id"])
+        for item in note_data["fleet_proof"]:
+            print(item)
+            print("\n")
+        print(self.battleship_games.joinGame(note_data["game_id"],note_data["sender_id"]))
 
     def note_type_fire(self, args: list):
         note_data = {
@@ -155,76 +166,6 @@ class BatleshipServer:
 
     def note_type_requestGamesNames(self, args: list):
         print(self.battleship_games.games.keys())
-
-        #if note_type == "create":
-        #    
-        #    note_data = {
-        #        "sender_id": args[0],
-        #        "game_id": args[1],
-        #        "fleet_position": args[2]
-        #    }
-        #    #verify battleground proof
-        #    
-        #    #if correct 
-        #    self.battleship_games.createGame(note_data["game_id"],note_data["sender_id"])
-            
-        #elif note_type == "join":
-        #    
-        #    note_data = {
-        #        "sender_id": args[0],
-        #        "game_id": args[1],
-        #        "fleet_proof": args[2]
-        #    }
-        #    self.battleship_games.joinGame(note_data["game_id"],note_data["sender_id"])
-
-        #elif note_type == "fire":
-        #    
-        #    note_data = {
-        #        "game_id": args[0],
-        #        "sender_id": args[1],
-        #        "target_player_id": args[2],
-        #        "shot_coordinates": (int(args[3]), int(args[4])),
-        #        "fleet_intact": args[5]
-        #    }
-        #    
-        #    print(self.battleship_games.fireShot(note_data["game_id"],note_data["sender_id"],note_data["target_player_id"],note_data["shot_coordinates"]))
-
-        #elif note_type == "report":
-        #    
-        #    note_data = {
-        #        "game_id": args[0],
-        #        "sender_id": args[1],
-        #        "shooter_id": args[2],
-        #        "shot_coordinates": (int(args[3]), int(args[4])),
-        #        "shot_result": args[5],
-        #        "response_correct": args[6]
-        #    }
-        #    
-        #    print(self.battleship_games.reportShot(note_data["game_id"],note_data["sender_id"],note_data["shooter_id"],note_data["shot_coordinates"],note_data["shot_result"]))
-            
-
-        #elif note_type == "wave":
-        #    
-        #    note_data = {
-        #        "game_id": args[0],
-        #        "sender_id": args[1]
-        #    }
-        #    
-        #    print(self.battleship_games.waveTurn(note_data["game_id"],note_data["sender_id"]))
-            
-        #elif note_type == "claim":
-        #    # Handle Claim Victory note
-        #    note_data = {
-        #        "game_id": args[0],
-        #        "sender_id": args[1],
-        #        "fleet_intact": args[2]
-        #    }
-        #    
-        #    print(self.battleship_games.claimVictory(note_data["game_id"],note_data["sender_id"]))
-        #    # Perform actions for Claim Victory note
-
-        #else:
-        #    print("Unknown note type:", note_type)
 
 if __name__ == '__main__':
     server = BatleshipServer()
