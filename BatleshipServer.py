@@ -1,7 +1,6 @@
 import socket
 import os
-import json
-import re
+import subprocess
 from BatleshipServerClasses import BatleshipGames
 
 
@@ -60,11 +59,26 @@ class BatleshipServer:
         self.socket.close()
         self.connected = False
 
+    # Receive message from client
     def receive(self):
         """Receive a message from the client"""
         return self.socket.recv(10240).decode()
     
+    def battle_ground_verifier(self):
+        verify_command = f'zokrates verify -j {self.temp_dir}/proof.json -v {self.field_proof_dir}/verification.key'
 
+        print(f"Executing command: {verify_command}")
+
+        try:
+            # Execute the compute-witness command
+            verify_process = subprocess.run(verify_command, shell=True, check=True, capture_output=True)
+            print(f"Output: {verify_process.stdout.decode()}")
+        except subprocess.CalledProcessError as e:
+            print(f"Error executing command: {e}")
+
+
+
+    # Create type note
     def note_type_create(self, args: list):
         note_data = {
             "sender_id": args[0],
@@ -75,16 +89,15 @@ class BatleshipServer:
         
 
         with open(f'{self.temp_dir}/proof.json','w') as f:
-            proof = json.dump(note_data["fleet_position"],f,indent = 4)
-        proof_josn_str = ""
-        for ch in note_data["fleet_position"]:
-            if ch == "\"":
-                proof_josn_str + "\'"
-            else:
-                proof_josn_str + ch
-        print(proof_josn_str)
+            f.write(note_data["fleet_position"])
+        
+        self.battle_ground_verifier()
+
+        os.remove(f'{self.temp_dir}/proof.json')
+
         print(self.battleship_games.createGame(note_data["game_id"],note_data["sender_id"]))
 
+    # Join type note
     def note_type_join(self, args: list):
         note_data = {
                 "sender_id": args[0],
@@ -96,6 +109,8 @@ class BatleshipServer:
             print("\n")
         print(self.battleship_games.joinGame(note_data["game_id"],note_data["sender_id"]))
 
+
+    # Fire type note
     def note_type_fire(self, args: list):
         note_data = {
                 "game_id": args[0],
@@ -107,6 +122,7 @@ class BatleshipServer:
             
         print(self.battleship_games.fireShot(note_data["game_id"],note_data["sender_id"],note_data["target_player_id"],note_data["shot_coordinates"]))
 
+    # Report type note
     def note_type_report(self, args: list):
         note_data = {
                 "game_id": args[0],
@@ -119,6 +135,7 @@ class BatleshipServer:
             
         print(self.battleship_games.reportShot(note_data["game_id"],note_data["sender_id"],note_data["shooter_id"],note_data["shot_coordinates"],note_data["shot_result"]))
 
+    # Wave type note
     def note_type_wave(self, args: list):
         note_data = {
                 "game_id": args[0],
@@ -127,6 +144,7 @@ class BatleshipServer:
             
         print(self.battleship_games.waveTurn(note_data["game_id"],note_data["sender_id"]))
 
+    # Claim type note
     def note_type_claim(self, args: list):
         note_data = {
                 "game_id": args[0],
@@ -137,6 +155,7 @@ class BatleshipServer:
         print(self.battleship_games.claimVictory(note_data["game_id"],note_data["sender_id"]))
         # Perform actions for Claim Victory note
 
+    # Request Player type note
     def note_type_requestPlayer(self, args: list):
         note_data = {
                 "game_id": args[0],
@@ -145,6 +164,7 @@ class BatleshipServer:
             
         print(self.battleship_games.requestPlayer(note_data["game_id"]))
 
+    # Request Turn type note
     def note_type_requestTurn(self, args: list):
         note_data = {
                 "game_id": args[0],
@@ -153,6 +173,11 @@ class BatleshipServer:
             
         print(self.battleship_games.requestTurn(note_data["game_id"]))
 
+    # Request Games Names type note
+    def note_type_requestGamesNames(self, args: list):
+        print(self.battleship_games.games.keys())
+
+    # Note factory
     def handle_note(self, note):
         """Handle different types of notes"""
         note_type, *args = note.split('$')
@@ -164,8 +189,7 @@ class BatleshipServer:
         else:
           print("Unknown note type:", note_type)  
 
-    def note_type_requestGamesNames(self, args: list):
-        print(self.battleship_games.games.keys())
+   
 
 if __name__ == '__main__':
     server = BatleshipServer()

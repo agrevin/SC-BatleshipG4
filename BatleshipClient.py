@@ -20,6 +20,8 @@ class BatleshipClient:
         self.connected = False
 
         #Game stuff
+        self.directions = [[0, -1],  [1, 0],   [0, 1],   [-1, 0]]
+
         self.boats = {'Carrier': 5,
                       'Battleship': 4,
                       'Destroyer': 3,
@@ -28,10 +30,12 @@ class BatleshipClient:
                       'Submarine1': 1,
                       'Submarine2': 1}
         self.field: list = [] # can be changed to class
+        self.field_map = [0] * 100
         self.game_id: str = game_id
         self.player_id =  player_id
         self.players_in_game = {}
         self.hash = []
+        self.field_nonce = random.randint(0, 2**16 - 1)
 
         if self.game_id != -1:
             self.create_direct()
@@ -72,10 +76,20 @@ class BatleshipClient:
             [x, y, direction] = input('Enter the x(0-9), y(0-9), and direction (0-UP, 1-RIGHT, 2-DOWN, 3-LEFT): ').split()
             _field.append([x, y, direction])
         self.field = _field
+
+        boat_counter = 0 
+        for boat in self.field:
+            x = int(boat[0])
+            y = int(boat[1])
+            direction = int(boat[2])
+            boat_length = list(self.boats.values())[boat_counter]
+            for j in range(boat_length):
+                self.field_map[x *10 + j * self.directions[direction][0] + y + j * self.directions[direction][1]] = self.field_map[x *10 + j * self.directions[direction][0] + y + j * self.directions[direction][1]] + 1
+
+            boat_counter += 1
+
         
     def battleGoundProof(self):
-        #generate random nonce from 0 to 2^16-1
-        self.field_nonce = random.randint(0, 2**16 - 1)
 
         #generate proof from zokrates file
         flat_list = [item for sublist in self.field for item in sublist]
@@ -118,7 +132,46 @@ class BatleshipClient:
 
         self.hash = proofHash[:]
         
+    def shotProof(self,x_guess: int ,y_guess: int):    
+        
+        zokdir = f'{os.getcwd()}/Shot_proof'
+        compute_witness_command = f'zokrates compute-witness -s {zokdir}/abi.json -i {zokdir}/out -o {self.shot_proof_dir}/witness -a {" ".join(hash for hash in self.hash)} {x_guess} {y_guess} {self.field_nonce} {" ".join(map(str, self.field_map))}'
+        generate_proof_command = f'zokrates generate-proof -i {zokdir}/out -j {self.shot_proof_dir}/proof.json -p {zokdir}/proving.key -w {self.shot_proof_dir}/witness'
 
+        print(f"Executing command: {compute_witness_command}")
+        # Execute the commands using subprocess
+
+        try:
+            # Execute the compute-witness command
+            compute_witness_process = subprocess.run(compute_witness_command, shell=True, check=True, capture_output=True)
+            #print(f"Output: {compute_witness_process.stdout.decode()}")
+        except subprocess.CalledProcessError as e:
+            print(f"Error executing command: {e}")  
+    
+        print(f"Executing command: {generate_proof_command}")
+        # Execute the commands using subprocess
+        try:
+            
+            #This cannot be like this, we need to check the output of the stdout to check if there was any problem
+
+            witness_file_path = f"{self.field_proof_dir}/witness"
+
+            while not os.path.exists(witness_file_path):
+                time.sleep(1)
+
+            generate_proof_process = subprocess.run(generate_proof_command, shell=True, check=True, capture_output=True)
+            #print(f"Output: {generate_proof_process.stdout.decode()}")
+        except subprocess.CalledProcessError as e:
+            print(f"Error executing command: {e}")          
+        
+
+        with open(f'{self.field_proof_dir}/proof.json') as f:
+            proof = json.load(f)
+
+        
+        proofHash = proof['inputs']
+
+        self.hash = proofHash[:]
 
 
 
@@ -151,6 +204,12 @@ class BatleshipClient:
         
         target = input('Enter the target player id: ')
         x, y = input('Enter the x(0-9), y(0-9): ').split()
+
+        self.shotProof(x,y)
+
+        exit(1)
+
+
         self.send(f'fire${self.game_id}${self.player_id}${target}${x}${y}$FaltaAProof')
 
     def report_shot(self):
@@ -239,7 +298,6 @@ if __name__ == '__main__':
         print("Choose your id:")
         player_id = input()
         client = BatleshipClient(game_id=game_id, player_id=player_id)
-        client.create_direct()
         client.join_game("create",game_id)
         client.start_game()
 
