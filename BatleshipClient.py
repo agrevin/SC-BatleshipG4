@@ -134,8 +134,7 @@ class BatleshipClient:
         self.battleGoundProof()
         with open(f'{self.field_proof_dir}/proof.json') as f:
             proof = json.load(f)
-        print(proof)
-        self.send(f'{label}${self.player_id}${game_id}${proof}')
+        self.send(f'{label}${self.player_id}${game_id}${json.dumps(proof)}')
 
 
 
