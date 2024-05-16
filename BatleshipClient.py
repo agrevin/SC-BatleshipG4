@@ -239,6 +239,7 @@ if __name__ == '__main__':
         print("Choose your id:")
         player_id = input()
         client = BatleshipClient(game_id=game_id, player_id=player_id)
+        client.create_direct()
         client.join_game("create",game_id)
         client.start_game()
 
@@ -253,9 +254,9 @@ if __name__ == '__main__':
         print("Choose a game id:")
         game_id = input()
         client.game_id  = game_id
+        client.create_direct()
         client.join_game("join",game_id)
         #To Do: interrupt if error in joining.
-        client.create_direct()
         client.start_game()
     else:
         print("Invalid game mode selected")
