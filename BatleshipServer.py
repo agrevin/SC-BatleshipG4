@@ -104,12 +104,14 @@ class BatleshipServer:
                 "game_id": args[1],
                 "fleet_proof": args[2]
             }
-        for item in note_data["fleet_proof"]:
-            print(item)
-            print("\n")
-        print(self.battleship_games.joinGame(note_data["game_id"],note_data["sender_id"]))
+        with open(f'{self.temp_dir}/proof.json','w') as f:
+            f.write(note_data["fleet_proof"])
 
+        self.battle_ground_verifier()
 
+        os.remove(f'self.temp_dir}/proof.json')
+
+        
     # Fire type note
     def note_type_fire(self, args: list):
         note_data = {
