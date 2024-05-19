@@ -63,6 +63,30 @@ class BatleshipServer:
     def receive(self):
         """Receive a message from the client"""
         return self.socket.recv(10240).decode()
+
+    def alive_verifier(self):
+        verify_command = f'zokrates verify -j {self.temp_dir}/proof.json -v {self.alive_proof_dir}/verification.key'
+
+        print(f"Executing command: {verify_command}")
+
+        try:
+            # Execute the compute-witness command
+            verify_process = subprocess.run(verify_command, shell=True, check=True, capture_output=True)
+            print(f"Output: {verify_process.stdout.decode()}")
+        except subprocess.CalledProcessError as e:
+            print(f"Error executing command: {e}")
+            
+    def shot_verifier(self):
+        verify_command = f'zokrates verify -j {self.temp_dir}/proof.json -v {self.shot_proof_dir}/verification.key'
+
+        print(f"Executing command: {verify_command}")
+
+        try:
+            # Execute the compute-witness command
+            verify_process = subprocess.run(verify_command, shell=True, check=True, capture_output=True)
+            print(f"Output: {verify_process.stdout.decode()}")
+        except subprocess.CalledProcessError as e:
+            print(f"Error executing command: {e}")
     
     def battle_ground_verifier(self):
         verify_command = f'zokrates verify -j {self.temp_dir}/proof.json -v {self.field_proof_dir}/verification.key'
@@ -121,7 +145,13 @@ class BatleshipServer:
                 "shot_coordinates": (int(args[3]), int(args[4])),
                 "fleet_intact": args[5]
             }
-            
+        with open(f'{self.temp_dir}/proof.json','w') as f:
+            f.write(note_data["fleet_position"])
+        
+        self.alive_verifier()
+
+        os.remove(f'{self.temp_dir}/proof.json')
+        
         print(self.battleship_games.fireShot(note_data["game_id"],note_data["sender_id"],note_data["target_player_id"],note_data["shot_coordinates"]))
 
     # Report type note
@@ -134,7 +164,13 @@ class BatleshipServer:
                 "shot_result": args[5],
                 "response_correct": args[6]
             }
-            
+
+        with open(f'{self.temp_dir}/proof.json','w') as f:
+            f.write(note_data["fleet_position"])
+        
+        self.shot_verifier()
+
+        os.remove(f'{self.temp_dir}/proof.json')
         print(self.battleship_games.reportShot(note_data["game_id"],note_data["sender_id"],note_data["shooter_id"],note_data["shot_coordinates"],note_data["shot_result"]))
 
     # Wave type note
@@ -153,7 +189,14 @@ class BatleshipServer:
                 "sender_id": args[1],
                 "fleet_intact": args[2]
             }
-            
+
+        with open(f'{self.temp_dir}/proof.json','w') as f:
+            f.write(note_data["fleet_position"])
+        
+        self.alive_verifier()
+
+        os.remove(f'{self.temp_dir}/proof.json')
+        
         print(self.battleship_games.claimVictory(note_data["game_id"],note_data["sender_id"]))
         # Perform actions for Claim Victory note
 
