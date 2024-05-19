@@ -135,7 +135,13 @@ class BatleshipClient:
     def shotProof(self,x_guess: int ,y_guess: int):    
         
         zokdir = f'{os.getcwd()}/Shot_proof'
-        compute_witness_command = f'zokrates compute-witness -s {zokdir}/abi.json -i {zokdir}/out -o {self.shot_proof_dir}/witness -a {" ".join(hash for hash in self.hash)} {x_guess} {y_guess} {self.field_nonce} {" ".join(map(str, self.field_map))}'
+
+        compute_witness_command = f'zokrates compute-witness -s {zokdir}/abi.json -i {zokdir}/out -o {self.shot_proof_dir}/witness -a '
+
+        for hash_ in self.hash:
+            compute_witness_command += (" " + str(int(hash_, 0)))
+
+        compute_witness_command += f' {x_guess} {y_guess} {self.field_nonce} {" ".join(map(str, self.field_map))}'
         generate_proof_command = f'zokrates generate-proof -i {zokdir}/out -j {self.shot_proof_dir}/proof.json -p {zokdir}/proving.key -w {self.shot_proof_dir}/witness'
 
         print(f"Executing command: {compute_witness_command}")
