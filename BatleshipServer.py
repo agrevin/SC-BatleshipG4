@@ -184,7 +184,7 @@ class BatleshipServer:
             }
 
         with open(f'{self.temp_dir}/proof.json','w') as f:
-            f.write(note_data["fleet_position"])
+            f.write(note_data["response_correct"])
         
         if self.shot_verifier():
             print(self.battleship_games.reportShot(note_data["game_id"],note_data["sender_id"],note_data["shooter_id"],note_data["shot_coordinates"],note_data["shot_result"]))
