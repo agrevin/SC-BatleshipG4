@@ -90,7 +90,12 @@ class BatleshipServer:
         try:
             # Execute the compute-witness command
             verify_process = subprocess.run(verify_command, shell=True, check=True, capture_output=True)
+            output_lines = verify_process.stdout.decode().splitlines()
             print(f"Output: {verify_process.stdout.decode()}")
+            if "PASSED" in output_lines[-1]:
+                return True
+            else:
+                return False
         except subprocess.CalledProcessError as e:
             print(f"Error executing command: {e}")
     
@@ -103,6 +108,11 @@ class BatleshipServer:
             # Execute the compute-witness command
             verify_process = subprocess.run(verify_command, shell=True, check=True, capture_output=True)
             print(f"Output: {verify_process.stdout.decode()}")
+            output_lines = verify_process.stdout.decode().splitlines()
+            if "PASSED" in output_lines[-1]:
+                return True
+            else:
+                return False
         except subprocess.CalledProcessError as e:
             print(f"Error executing command: {e}")
 
