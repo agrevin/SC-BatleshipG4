@@ -35,7 +35,7 @@ class BatleshipClient:
         self.player_id =  player_id
         self.players_in_game = {}
         self.hash = []
-        self.field_nonce = random.randint(0, 2**16 - 1)
+        self.field_nonce = [random.randint(0, 2**16 - 1)]
 
         if self.game_id != -1:
             self.create_direct()
@@ -94,7 +94,7 @@ class BatleshipClient:
         #generate proof from zokrates file
         flat_list = [item for sublist in self.field for item in sublist]
         zokdir = f'{os.getcwd()}/BattleGround_proof'
-        compute_witness_command = f'zokrates compute-witness -s {zokdir}/abi.json -i {zokdir}/out -o {self.field_proof_dir}/witness -a {self.field_nonce} {" ".join(map(str, flat_list))}'
+        compute_witness_command = f'zokrates compute-witness -s {zokdir}/abi.json -i {zokdir}/out -o {self.field_proof_dir}/witness -a {self.field_nonce[-1]} {" ".join(map(str, flat_list))}'
         generate_proof_command = f'zokrates generate-proof -i {zokdir}/out -j {self.field_proof_dir}/proof.json -p {zokdir}/proving.key -w {self.field_proof_dir}/witness'
 
         print(f"Executing command: {compute_witness_command}")
@@ -130,18 +130,25 @@ class BatleshipClient:
         
         proofHash = proof['inputs']
 
-        self.hash = proofHash[:]
+        self.hash.append(proofHash[:])
         
-    def shotProof(self,x_guess: int ,y_guess: int):    
+    def shotProof(self,x_guess: int ,y_guess: int, result: str):    
+
+        if (result == 'HIT' or result == 'SUNK'):
+            report = 1 
+        else:
+            report = 0
         
         zokdir = f'{os.getcwd()}/Shot_proof'
 
+        self.field_nonce.append(random.randint(0, 2**16 - 1))
+
         compute_witness_command = f'zokrates compute-witness -s {zokdir}/abi.json -i {zokdir}/out -o {self.shot_proof_dir}/witness -a '
 
-        for hash_ in self.hash:
+        for hash_ in self.hash[-1]:
             compute_witness_command += (" " + str(int(hash_, 0)))
 
-        compute_witness_command += f' {x_guess} {y_guess} {self.field_nonce} {" ".join(map(str, self.field_map))}'
+        compute_witness_command += f' {self.field_nonce[-2]} {x_guess} {y_guess} {report} {self.field_nonce[-1]} {" ".join(map(str, self.field_map))}'
         generate_proof_command = f'zokrates generate-proof -i {zokdir}/out -j {self.shot_proof_dir}/proof.json -p {zokdir}/proving.key -w {self.shot_proof_dir}/witness'
 
         print(f"Executing command: {compute_witness_command}")
@@ -174,18 +181,17 @@ class BatleshipClient:
         with open(f'{self.field_proof_dir}/proof.json') as f:
             proof = json.load(f)
 
-        
         proofHash = proof['inputs']
 
-        self.hash = proofHash[:]
+        self.hash.append(proofHash[:])
 
     def aliveProof(self):
         zokdir = f'{os.getcwd()}/AliveProof'
 
         compute_witness_command = f'zokrates compute-witness -s {zokdir}/abi.json -i {zokdir}/out -o {self.alive_proof_dir}/witness -a '
-        compute_witness_command += f'{" ".join(map(str, self.field_map))} {self.field_nonce}'
+        compute_witness_command += f'{" ".join(map(str, self.field_map))} {self.field_nonce[-1]}'
 
-        for hash_ in self.hash:
+        for hash_ in self.hash[-1]:
             compute_witness_command += (" " + str(int(hash_, 0)))
 
         generate_proof_command = f'zokrates generate-proof -i {zokdir}/out -j {self.alive_proof_dir}/proof.json -p {zokdir}/proving.key -w {self.alive_proof_dir}/witness'
@@ -265,7 +271,7 @@ class BatleshipClient:
         x, y = input('Enter the x(0-9), y(0-9): ').split()
         result = input('Enter the result (HIT, MISS, SUNK): ')
 
-        self.shotProof(x,y)
+        self.shotProof(x,y,result)
 
         with open(f'{self.shot_proof_dir}/proof.json') as f:
             proof = json.load(f)

@@ -75,7 +75,8 @@ class Game:
 
         if self.hasReported[reportingPlayer] == True:   
             return f"In the game {self.title}: Reporting Player: {reportingPlayer} has already reported the last shot"
-    
+
+        self.hasReported[reportingPlayer] = True
         return f"In the game {self.title}: Reporting Player: {reportingPlayer} is reporting a {result} at x: {shotCoords[0]} and y: {shotCoords[1]} from shot from Shooting Player: {shootingPlayer}"
 
     
@@ -87,7 +88,7 @@ class Game:
                 return f"In the game {self.title}: Player: {waveTurnPlayer} cannot wave its turn because it is not their turn."
             
         if self.hasReported[waveTurnPlayer] == False:   
-            return f"In the game {self.title}: WaveTurning Player: {reportingPlayer} cannot wave its turn until it has reported the shot"
+            return f"In the game {self.title}: WaveTurning Player: {waveTurnPlayer} cannot wave its turn until it has reported the shot"
 
         print(f"Player: '{waveTurnPlayer}' has decided to wave its turn")
         self.turn.append(self.turn[0])

@@ -94,7 +94,12 @@ class BatleshipServer:
         try:
             # Execute the compute-witness command
             verify_process = subprocess.run(verify_command, shell=True, check=True, capture_output=True)
+            output_lines = verify_process.stdout.decode().splitlines()
             print(f"Output: {verify_process.stdout.decode()}")
+            if "PASSED" in output_lines[-1]:
+                return True
+            else:
+                return False
         except subprocess.CalledProcessError as e:
             print(f"Error executing command: {e}")
     
@@ -107,6 +112,11 @@ class BatleshipServer:
             # Execute the compute-witness command
             verify_process = subprocess.run(verify_command, shell=True, check=True, capture_output=True)
             print(f"Output: {verify_process.stdout.decode()}")
+            output_lines = verify_process.stdout.decode().splitlines()
+            if "PASSED" in output_lines[-1]:
+                return True
+            else:
+                return False
         except subprocess.CalledProcessError as e:
             print(f"Error executing command: {e}")
 
@@ -178,7 +188,7 @@ class BatleshipServer:
             }
 
         with open(f'{self.temp_dir}/proof.json','w') as f:
-            f.write(note_data["fleet_position"])
+            f.write(note_data["response_correct"])
         
         if self.shot_verifier():
             print(self.battleship_games.reportShot(note_data["game_id"],note_data["sender_id"],note_data["shooter_id"],note_data["shot_coordinates"],note_data["shot_result"]))
