@@ -1,3 +1,5 @@
+import time
+
 class Player:
     """Class for a Player"""  
     def __init__(self, name: int):
@@ -18,17 +20,16 @@ class Game:
         self.players.append(newPlayer.name)
         self.turn = []
         self.turn.append(firstPlayerId)
-        self.waveturn = {} 
-        self.waveturn[firstPlayerId] = False
         self.hasReported = {}
         self.hasReported[firstPlayerId] = True
+        self.playerClaimedVictory = None
+        self.victoryClock = None
 
   
     def addPlayer(self, player: int)->str:
         """Add a player to the game"""
         newPlayer = Player(player) 
         self.players.append(newPlayer.name)
-        self.waveturn[player] = False
         self.turn.append(player)
         return f"In the game '{self.title}': the Player: '{newPlayer.name}' has joined."
 
@@ -93,14 +94,21 @@ class Game:
         print(f"Player: '{waveTurnPlayer}' has decided to wave its turn")
         self.turn.append(self.turn[0])
         self.turn.pop(0)
-        self.waveturn[waveTurnPlayer] = True
         return f"In the game {self.title}: It is Player : {self.turn[0]} turn."
 
     def checkVcitoryClaim(self, claimVictoryPlayer:int )-> str:
-        if False in self.waveturn.values():
-            return f"In the game {self.title}: The Player : {claimVictoryPlayer} Won."
+            self.playerClaimedVictory = claimVictoryPlayer
+            self.victoryClock = time.time() 
+            return f"In the game {self.title}: The Player : {claimVictoryPlayer} has claimed victory\n Players have 15s to proof they are alive."
         
-        
+    def proof_alivness(self, player:int)-> str:
+        if self.playerClaimedVictory == None:
+            return f"In the game {self.title}: No player has claimed victory yet."
+
+        if time.time() - self.victoryClock < 15:
+            self.victoryClock = None
+            self.playerClaimedVictory = None
+            return f"In the game {self.title}: Player : {player} has proved they are alive.\n Game will continue."   
 
 class BatleshipGames:
     """Class for a Batleship Games"""
@@ -162,6 +170,11 @@ class BatleshipGames:
     def requestTurn(self, gametitle: str)-> str:
         """Request player"""
         return f"In the game {gametitle}: it is Player : {self.games[gametitle].turn[0]} turn."
+    
+    def proofAlive(self, gametitle: str, player: int)-> str:
+        """Proof Alive"""
+        if gametitle in self.games:
+            return self.games[gametitle].proof_alivness(player)
 
 
 

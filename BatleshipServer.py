@@ -34,7 +34,8 @@ class BatleshipServer:
             "claim": self.note_type_claim,
             "requestPlayer": self.note_type_requestPlayer,
             "requestTurn": self.note_type_requestTurn,
-            "requestGamesNames": self.note_type_requestGamesNames
+            "requestGamesNames": self.note_type_requestGamesNames,
+            "proveAlive": self.note_type_proveAlive,
         }
 
         #Directory stuff
@@ -241,6 +242,21 @@ class BatleshipServer:
             }
             
         print(self.battleship_games.requestTurn(note_data["game_id"]))
+
+    def note_type_proveAlive(self, args: list):
+        note_data = {
+                "game_id": args[0],
+                "sender_id": args[1],
+                "fleet_intact": args[2]
+            }
+
+        with open(f'{self.temp_dir}/proof.json','w') as f:
+            f.write(note_data["fleet_position"])
+        
+        if self.alive_verifier():
+            print(self.battleship_games.proofAlive(note_data["game_id"],note_data["sender_id"]))
+
+        os.remove(f'{self.temp_dir}/proof.json')
 
     # Request Games Names type note
     def note_type_requestGamesNames(self, args: list):

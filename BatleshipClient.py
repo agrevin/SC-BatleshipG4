@@ -317,6 +317,13 @@ class BatleshipClient:
         print("Your game player info is:\n")
         for key, value in self.players_in_game.items():
             print(f"Player '{key}' as received '{value}' shots.")
+
+    def proof_alivness(self):
+        self.aliveProof()
+        with open(f'{self.alive_proof_dir}/proof.json') as f:
+            proof = json.load(f)
+        self.send(f'proveAlive${self.game_id}${self.player_id}${json.dumps(proof)}')
+
     def clean_dir(self):
         """Remove the proof directory"""
         os.system(f'rm -rf {self.proof_dir}')
@@ -334,12 +341,13 @@ class BatleshipClient:
             "7": self.increase_shot_counter,
             "8": self.add_players_info,
             "9": self.see_my_game_players_info,
-            "10": lambda: (self.disconnect(), self.clean_dir(), exit())
+            "10": self.proof_alivness,
+            "11": lambda: (self.disconnect(), self.clean_dir(), exit())
         }
 
         while(True):
             print("Decide action:")
-            action = input("1. Wave turn\n2. Fire shot\n3. Report shot\n4. Claim victory\n5. See Players in your game\n6. See whose turn is it\n7. Increase shot counter\n8. Add a player info\n9. See your game players status\n10. Exit\n")
+            action = input("1. Wave turn\n2. Fire shot\n3. Report shot\n4. Claim victory\n5. See Players in your game\n6. See whose turn is it\n7. Increase shot counter\n8. Add a player info\n9. See your game players status\n10. Prove you are alive.\n11. Exit\n")
 
             result = action_dispatcher.get(action)
             if result is not None:
