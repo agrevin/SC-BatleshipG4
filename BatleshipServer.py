@@ -1,6 +1,8 @@
 import socket
 import os
 import subprocess
+import shutil
+import time
 from BatleshipServerClasses import BatleshipGames
 
 
@@ -46,6 +48,8 @@ class BatleshipServer:
         os.makedirs(self.alive_proof_dir, exist_ok=True)
         os.makedirs(self.shot_proof_dir, exist_ok=True)
         os.makedirs(self.temp_dir, exist_ok=True)
+
+        self.move_Keys()
 
 
     def connect(self):
@@ -245,6 +249,44 @@ class BatleshipServer:
           print("Unknown note type:", note_type)  
 
    
+    def move_Keys(self):
+
+        current_dir = os.getcwd()
+        BattleGroundProofDirect = f'{current_dir}/BattleGround_proof/verification.key'
+        AliveProofDirect = f'{current_dir}/AliveProof/verification.key'
+        ShotProofDirect = f'{current_dir}/Shot_proof/verification.key'
+
+        # Target paths
+        field_proof_target = f'{self.field_proof_dir}/verification.key'
+        alive_proof_target = f'{self.alive_proof_dir}/verification.key'
+        shot_proof_target = f'{self.shot_proof_dir}/verification.key'
+
+        # Move files if they do not already exist in the target locations
+        if not os.path.exists(field_proof_target):
+            shutil.move(BattleGroundProofDirect, field_proof_target)
+            print(f"Moved {BattleGroundProofDirect} to {field_proof_target}")
+        else:
+            print(f"File already exists at {field_proof_target}")
+
+        if not os.path.exists(alive_proof_target):
+            shutil.move(AliveProofDirect, alive_proof_target)
+            print(f"Moved {AliveProofDirect} to {alive_proof_target}")
+        else:
+            print(f"File already exists at {alive_proof_target}")
+
+        if not os.path.exists(shot_proof_target):
+            shutil.move(ShotProofDirect, shot_proof_target)
+            print(f"Moved {ShotProofDirect} to {shot_proof_target}")
+        else:
+            print(f"File already exists at {shot_proof_target}")
+
+        time.sleep(2)
+        os.system('clear')
+
+
+
+
+
 
 if __name__ == '__main__':
     server = BatleshipServer()
