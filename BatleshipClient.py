@@ -182,6 +182,7 @@ class BatleshipClient:
             compute_witness_process = subprocess.run(compute_witness_command, shell=True, check=True, capture_output=True)
             #print(f"Output: {compute_witness_process.stdout.decode()}")
         except subprocess.CalledProcessError as e:
+            executed_correctly = False
             print(f"Error executing command: {e}")  
     
         #print(f"Executing command: {generate_proof_command}")
@@ -211,6 +212,10 @@ class BatleshipClient:
             proofHash = proof['inputs']
 
             self.hash.append(proofHash[3:])
+        else:
+            proof_data = {"Failed": "true"}
+            with open(f'{self.shot_proof_dir}/proof.json','w') as f:
+                json.dump(proof_data, f)
 
         os.system("clear")
 
@@ -240,6 +245,7 @@ class BatleshipClient:
             compute_witness_process = subprocess.run(compute_witness_command, shell=True, check=True, capture_output=True)
             #print(f"Output: {compute_witness_process.stdout.decode()}")
         except subprocess.CalledProcessError as e:
+            executed_correctly = False
             print(f"Error executing command: {e}")  
     
         #print(f"Executing command: {generate_proof_command}")
@@ -259,6 +265,10 @@ class BatleshipClient:
                 #print(f"Output: {generate_proof_process.stdout.decode()}")
             except subprocess.CalledProcessError as e:
                 print(f"Error executing command: {e}")    
+        else:
+            proof_data = {"Failed": "true"}
+            with open(f'{self.alive_proof_dir}/proof.json','w') as f:
+                json.dump(proof_data, f)
 
         os.system("clear")      
         
