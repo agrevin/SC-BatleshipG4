@@ -31,15 +31,21 @@ class Game:
 
   
     def addPlayer(self, player: int)->str:
-        if self.gameHasEnded:
-            return f"In the game '{self.title}': Game has ended. Player: '{player}' cannot join."
+        if not self.gameHasEnded and (self.victoryClock == None or time.time() - self.victoryClock < time_to_proof_alive):
+            
+            if self.playerClaimedVictory != None:
+                self.playerClaimedVictory = None
+                self.victoryClock = None
 
-        """Add a player to the game"""
-        newPlayer = Player(player) 
-        self.players.append(newPlayer.name)
-        self.turn.append(player)
-        self.hasReported[player] = True
-        return f"In the game '{self.title}': the Player: '{newPlayer.name}' has joined."
+            """Add a player to the game"""
+            newPlayer = Player(player) 
+            self.players.append(newPlayer.name)
+            self.turn.append(player)
+            self.hasReported[player] = True
+            return f"In the game '{self.title}': the Player: '{newPlayer.name}' has joined."
+        else:
+            self.gameHasEnded = True
+            return f"In the game '{self.title}': Game has ended. Player: '{player}' cannot join."
 
 
     def fireShotInGame(self, shootingPlayer :  int, targettingPlayer: int, shotCoords: list) -> str:
@@ -78,6 +84,7 @@ class Game:
             #Print whose turn is next
             return f"In the game {self.title}: Shooting Player: {shootingPlayer} shot Targetting Player: {targettingPlayer} at x: {shotCoords[0]} and y: {shotCoords[1]}"
         else:
+            self.gameHasEnded = True
             return f"In the game {self.title}: Game has ended."
 
         
@@ -99,6 +106,7 @@ class Game:
             self.hasReported[reportingPlayer] = True
             return f"In the game {self.title}: Reporting Player: {reportingPlayer} is reporting a {result} at x: {shotCoords[0]} and y: {shotCoords[1]} from shot from Shooting Player: {shootingPlayer}"
         else:
+            self.gameHasEnded = True
             return f"In the game {self.title}: Game has ended."
 
     
@@ -127,6 +135,7 @@ class Game:
                 self.victoryClock = time.time() 
                 return f"In the game {self.title}: The Player : {claimVictoryPlayer} has claimed victory\n Players have 15s to proof they are alive."
             else:
+                self.gameHasEnded = True
                 return f"In the game {self.title}: Game has ended."
         
 
