@@ -77,6 +77,8 @@ class Game:
             self.turn.insert(0,targettingPlayer)
             #Print whose turn is next
             return f"In the game {self.title}: Shooting Player: {shootingPlayer} shot Targetting Player: {targettingPlayer} at x: {shotCoords[0]} and y: {shotCoords[1]}"
+        else:
+            return f"In the game {self.title}: Game has ended."
 
         
     def reportShotInGame(self, reportingPlayer: int, shootingPlayer: int, shotCoords: list, result: str)-> str :
@@ -142,7 +144,7 @@ class Game:
                 return f"In the game {self.title}: Player : {player} has proved they are alive.\n Game will continue."   
             
             self.gameHasEnded = True
-            return f"In the game {self.title}: Player : {player} has won the game.\n Game has ended."
+            return f"In the game {self.title}: Player : {self.playerClaimedVictory} has won the game.\n Game has ended."
         else:
             return f"In the game {self.title}: Game has ended."
 
