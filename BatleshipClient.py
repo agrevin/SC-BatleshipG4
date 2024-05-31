@@ -41,6 +41,7 @@ class BatleshipClient:
             self.create_direct()
         self.connect()
 
+
     def create_direct(self):
 
         self.proof_dir: str = f"{os.getcwd()}/{self.game_id}{random.randint(0, 2**16 - 1)}"
@@ -59,15 +60,18 @@ class BatleshipClient:
         self.socket.connect((self.host, self.port))
         self.connected = True
 
+
     def disconnect(self):
         """Disconnect from the server"""
         self.socket.close()
         self.connected = False
 
+
     def send(self, message: str):
         """Send a message to the server"""
         self.socket.send(message.encode())
     
+
     def place_boats(self):
         """Ask the user to place their boats and generate a proof and a hash of the field configuration"""
         _field = []
@@ -87,57 +91,75 @@ class BatleshipClient:
                 self.field_map[x *10 + j * self.directions[direction][0] + y + j * self.directions[direction][1]] = self.field_map[x *10 + j * self.directions[direction][0] + y + j * self.directions[direction][1]] + 1
 
             boat_counter += 1
+        
+        print("Clearing the screen...")
+        time.sleep(1)
+        os.system("clear")
 
         
     def battleGoundProof(self):
 
         #generate proof from zokrates file
         flat_list = [item for sublist in self.field for item in sublist]
-        zokdir = f'{os.getcwd()}/BattleGround_proof'
+        zokdir = f'{os.getcwd()}/BattleGround_proof_v2'
         compute_witness_command = f'zokrates compute-witness -s {zokdir}/abi.json -i {zokdir}/out -o {self.field_proof_dir}/witness -a {self.field_nonce[-1]} {" ".join(map(str, flat_list))}'
         generate_proof_command = f'zokrates generate-proof -i {zokdir}/out -j {self.field_proof_dir}/proof.json -p {zokdir}/proving.key -w {self.field_proof_dir}/witness'
 
-        print(f"Executing command: {compute_witness_command}")
-        # Execute the commands using subprocess
+        #print(f"Executing command: {compute_witness_command}")
+        
+        executed_correctly = True
+        print("Computing witness...")
 
         try:
             # Execute the compute-witness command
             compute_witness_process = subprocess.run(compute_witness_command, shell=True, check=True, capture_output=True)
             #print(f"Output: {compute_witness_process.stdout.decode()}")
+
         except subprocess.CalledProcessError as e:
-            print(f"Error executing command: {e}")  
+            print(f"Assertion failure.")
+            executed_correctly = False  
     
-        print(f"Executing command: {generate_proof_command}")
-        # Execute the commands using subprocess
-        try:
-            
-            #This cannot be like this, we need to check the output of the stdout to check if there was any problem
-
-            witness_file_path = f"{self.field_proof_dir}/witness"
-
-            while not os.path.exists(witness_file_path):
-                time.sleep(1)
-
-            generate_proof_process = subprocess.run(generate_proof_command, shell=True, check=True, capture_output=True)
-            #print(f"Output: {generate_proof_process.stdout.decode()}")
-        except subprocess.CalledProcessError as e:
-            print(f"Error executing command: {e}")          
+        #print(f"Executing command: {generate_proof_command}")
         
+        
+        if executed_correctly:
+            print("Witness computed, generating proof...")
+            try:
+                
+                #This cannot be like this, we need to check the output of the stdout to check if there was any problem
 
-        with open(f'{self.field_proof_dir}/proof.json') as f:
-            proof = json.load(f)
+                witness_file_path = f"{self.field_proof_dir}/witness"
+
+                while not os.path.exists(witness_file_path):
+                    time.sleep(1)
+
+                generate_proof_process = subprocess.run(generate_proof_command, shell=True, check=True, capture_output=True)
+                #print(f"Output: {generate_proof_process.stdout.decode()}")
+            except subprocess.CalledProcessError as e:
+                print(f"Error executing command: {e}")      
+
+            print("Proof generated.")
+
+            with open(f'{self.field_proof_dir}/proof.json') as f:
+                proof = json.load(f)
 
         
-        proofHash = proof['inputs']
+            proofHash = proof['inputs']
 
-        self.hash.append(proofHash[:])
-        
-    def shotProof(self,x_guess: int ,y_guess: int, result: str):    
+            self.hash.append(proofHash[:])  
 
-        if (result == 'HIT' or result == 'SUNK'):
-            report = 1 
+            os.system("clear")
+
         else:
-            report = 0
+            print("Error computing witness, Battleground incorrectly set, shutting down.")
+            self.disconnect()
+            self.clean_dir()
+            exit()
+
+        
+    def shotProof(self,x_guess: int ,y_guess: int, result: int):    
+
+        report = int(result)
         
         zokdir = f'{os.getcwd()}/Shot_proof'
 
@@ -151,8 +173,9 @@ class BatleshipClient:
         compute_witness_command += f' {self.field_nonce[-2]} {x_guess} {y_guess} {report} {self.field_nonce[-1]} {" ".join(map(str, self.field_map))}'
         generate_proof_command = f'zokrates generate-proof -i {zokdir}/out -j {self.shot_proof_dir}/proof.json -p {zokdir}/proving.key -w {self.shot_proof_dir}/witness'
 
-        print(f"Executing command: {compute_witness_command}")
-        # Execute the commands using subprocess
+        #print(f"Executing command: {compute_witness_command}")
+        
+        print("Computing witness...")
 
         try:
             # Execute the compute-witness command
@@ -161,13 +184,15 @@ class BatleshipClient:
         except subprocess.CalledProcessError as e:
             print(f"Error executing command: {e}")  
     
-        print(f"Executing command: {generate_proof_command}")
-        # Execute the commands using subprocess
+        #print(f"Executing command: {generate_proof_command}")
+        
+        print("Witness computed, generating proof...")
+
         try:
             
             #This cannot be like this, we need to check the output of the stdout to check if there was any problem
 
-            witness_file_path = f"{self.field_proof_dir}/witness"
+            witness_file_path = f"{self.shot_proof_dir}/witness"
 
             while not os.path.exists(witness_file_path):
                 time.sleep(1)
@@ -177,27 +202,37 @@ class BatleshipClient:
         except subprocess.CalledProcessError as e:
             print(f"Error executing command: {e}")          
         
+        self.field_map[int(x_guess) * 10 + int(y_guess)] = 0
 
-        with open(f'{self.field_proof_dir}/proof.json') as f:
+
+        with open(f'{self.shot_proof_dir}/proof.json') as f:
             proof = json.load(f)
 
         proofHash = proof['inputs']
 
-        self.hash.append(proofHash[:])
+        self.hash.append(proofHash[3:])
+
+        os.system("clear")
+
 
     def aliveProof(self):
         zokdir = f'{os.getcwd()}/AliveProof'
 
         compute_witness_command = f'zokrates compute-witness -s {zokdir}/abi.json -i {zokdir}/out -o {self.alive_proof_dir}/witness -a '
+
+
         compute_witness_command += f'{" ".join(map(str, self.field_map))} {self.field_nonce[-1]}'
 
         for hash_ in self.hash[-1]:
+            
+            #problem of inputs here
             compute_witness_command += (" " + str(int(hash_, 0)))
 
         generate_proof_command = f'zokrates generate-proof -i {zokdir}/out -j {self.alive_proof_dir}/proof.json -p {zokdir}/proving.key -w {self.alive_proof_dir}/witness'
 
-        print(f"Executing command: {compute_witness_command}")
-        # Execute the commands using subprocess
+        #print(f"Executing command: {compute_witness_command}")
+        
+        print("Computing witness...")
 
         try:
             # Execute the compute-witness command
@@ -206,8 +241,10 @@ class BatleshipClient:
         except subprocess.CalledProcessError as e:
             print(f"Error executing command: {e}")  
     
-        print(f"Executing command: {generate_proof_command}")
-        # Execute the commands using subprocess
+        #print(f"Executing command: {generate_proof_command}")
+        
+        print("Witness computed, generating proof...")
+
         try:
             
             #This cannot be like this, we need to check the output of the stdout to check if there was any problem
@@ -220,12 +257,10 @@ class BatleshipClient:
             generate_proof_process = subprocess.run(generate_proof_command, shell=True, check=True, capture_output=True)
             #print(f"Output: {generate_proof_process.stdout.decode()}")
         except subprocess.CalledProcessError as e:
-            print(f"Error executing command: {e}")          
+            print(f"Error executing command: {e}")    
+
+        os.system("clear")      
         
-
-
-
-
 
     def join_game(self, label: str ,game_id: str):
         """Join a game"""
@@ -237,11 +272,13 @@ class BatleshipClient:
             proof = json.load(f)
         self.send(f'{label}${self.player_id}${game_id}${json.dumps(proof)}')
 
+        os.remove(f'{self.field_proof_dir}/proof.json')
 
 
     def wave_turn(self):
         """Wave the turn"""
         self.send(f'wave${self.game_id}${self.player_id}')
+
 
     def fire_shot(self):
         """Fire a shot"""
@@ -253,12 +290,17 @@ class BatleshipClient:
         target = input('Enter the target player id: ')
         x, y = input('Enter the x(0-9), y(0-9): ').split()
 
+        os.system("clear")
+
         self.aliveProof()
 
         with open(f'{self.alive_proof_dir}/proof.json') as f:
             proof = json.load(f)
 
         self.send(f'fire${self.game_id}${self.player_id}${target}${x}${y}${json.dumps(proof)}')
+
+        os.remove(f'{self.alive_proof_dir}/proof.json')
+
 
     def report_shot(self):
         """Report a shot"""
@@ -269,7 +311,9 @@ class BatleshipClient:
         
         target = input('Enter the attacker player id: ')
         x, y = input('Enter the x(0-9), y(0-9): ').split()
-        result = input('Enter the result (HIT, MISS, SUNK): ')
+        result = input('Enter the result:\n0. MISS\n1. HIT\n')
+        
+        os.system("clear")
 
         self.shotProof(x,y,result)
 
@@ -277,6 +321,9 @@ class BatleshipClient:
             proof = json.load(f)
         
         self.send(f'report${self.game_id}${self.player_id}${target}${x}${y}${result}${json.dumps(proof)}')
+
+        os.remove(f'{self.shot_proof_dir}/proof.json')
+
 
     def claim_victory(self):
         """Claim victory"""
@@ -288,6 +335,13 @@ class BatleshipClient:
 
         self.send(f'claim${self.game_id}${self.player_id}${json.dumps(proof)}')
 
+        os.remove(f'{self.alive_proof_dir}/proof.json')
+
+        print("Clearing the screen...")
+        time.sleep(1)
+        os.system("clear")
+
+
     def see_Players(self):
         self.send(f'requestPlayer${self.game_id}${self.player_id}')
         print("Do you wish to add the info of a new player?")
@@ -296,10 +350,18 @@ class BatleshipClient:
             print("Input the Players id")
             players_id = input()
             self.players_in_game[players_id] = 0
+        
+        print("Clearing the screen...")
+        time.sleep(1)
+        os.system("clear")
+
 
     def see_Turn(self):
         self.send(f'requestTurn${self.game_id}${self.player_id}')
+
+        os.system("clear")
     
+
     def increase_shot_counter(self):
         print("To what player do you wish to increase the shot counter")
         player_to_increase = input()
@@ -307,16 +369,30 @@ class BatleshipClient:
             print("That player isnt currently in your game")
         
         self.players_in_game[player_to_increase] = self.players_in_game[player_to_increase] + 1
+
+        print("Clearing the screen...")
+        time.sleep(1)
+        os.system("clear")
     
+
     def add_players_info(self):
         print("What players info do you wish to add")
         player_new_info = input()
         self.players_in_game[player_new_info] = 0
 
+        print("Clearing the screen...")
+        time.sleep(1)
+        os.system("clear")
+
+
     def see_my_game_players_info(self):
-        print("Your game player info is:\n")
+        os.system("clear")
+        print("Your game player's info is:\n")
         for key, value in self.players_in_game.items():
-            print(f"Player '{key}' as received '{value}' shots.")
+            print(f"Player '{key}' as received '{value}' shots.\n")
+        
+
+
 
     def proof_alivness(self):
         self.aliveProof()
@@ -324,9 +400,13 @@ class BatleshipClient:
             proof = json.load(f)
         self.send(f'proveAlive${self.game_id}${self.player_id}${json.dumps(proof)}')
 
+        os.remove(f'{self.alive_proof_dir}/proof.json')
+
+
     def clean_dir(self):
         """Remove the proof directory"""
         os.system(f'rm -rf {self.proof_dir}')
+
 
     def start_game(self):
         """Start the game"""

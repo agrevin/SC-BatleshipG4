@@ -24,6 +24,7 @@ class Game:
         self.hasReported[firstPlayerId] = True
         self.playerClaimedVictory = None
         self.victoryClock = None
+        self.gameHasEnded = False
 
   
     def addPlayer(self, player: int)->str:
@@ -34,7 +35,6 @@ class Game:
         return f"In the game '{self.title}': the Player: '{newPlayer.name}' has joined."
 
 
-    
     def fireShotInGame(self, shootingPlayer :  int, targettingPlayer: int, shotCoords: list) -> str:
         
         """Verify is players actually exist"""
@@ -65,7 +65,6 @@ class Game:
         return f"In the game {self.title}: Shooting Player: {shootingPlayer} shot Targetting Player: {targettingPlayer} at x: {shotCoords[0]} and y: {shotCoords[1]}"
 
         
-
     def reportShotInGame(self, reportingPlayer: int, shootingPlayer: int, shotCoords: list, result: str)-> str :
 
         if reportingPlayer not in self.players or shootingPlayer not in self.players:
@@ -96,11 +95,13 @@ class Game:
         self.turn.pop(0)
         return f"In the game {self.title}: It is Player : {self.turn[0]} turn."
 
+
     def checkVcitoryClaim(self, claimVictoryPlayer:int )-> str:
             self.playerClaimedVictory = claimVictoryPlayer
             self.victoryClock = time.time() 
             return f"In the game {self.title}: The Player : {claimVictoryPlayer} has claimed victory\n Players have 15s to proof they are alive."
         
+
     def proof_alivness(self, player:int)-> str:
         if self.playerClaimedVictory == None:
             return f"In the game {self.title}: No player has claimed victory yet."
@@ -109,6 +110,9 @@ class Game:
             self.victoryClock = None
             self.playerClaimedVictory = None
             return f"In the game {self.title}: Player : {player} has proved they are alive.\n Game will continue."   
+        
+        self.gameHasEnded = True
+        return f"In the game {self.title}: Player : {player} has won the game.\n Game has ended."
 
 class BatleshipGames:
     """Class for a Batleship Games"""
@@ -125,8 +129,6 @@ class BatleshipGames:
         self.games[gametitle] = Game(gametitle,player)
         
         return f"A new game called '{gametitle}' was created."
-
-
 
 
     def joinGame(self, gametitle: str, player: int) -> str:
@@ -162,19 +164,25 @@ class BatleshipGames:
         """Claim victory"""
         if gametitle in self.games:
            return self.games[gametitle].checkVcitoryClaim(claimVictoryPlayer)
-        
+
+
     def requestPlayer(self, gametitle: str)-> str:
         """Request player"""
         return f"The players in the game {gametitle} are : {self.games[gametitle].players}"
-        
+
+
     def requestTurn(self, gametitle: str)-> str:
         """Request player"""
         return f"In the game {gametitle}: it is Player : {self.games[gametitle].turn[0]} turn."
     
+
     def proofAlive(self, gametitle: str, player: int)-> str:
         """Proof Alive"""
         if gametitle in self.games:
-            return self.games[gametitle].proof_alivness(player)
+            msg_to_return = self.games[gametitle].proof_alivness(player)
+            if self.games[gametitle].gameHasEnded:
+                del self.games[gametitle]
+            return msg_to_return
 
 
 
