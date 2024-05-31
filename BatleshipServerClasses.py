@@ -5,21 +5,21 @@ time_to_proof_alive = 30
 
 class Player:
     """Class for a Player"""  
-    def __init__(self, name: int):
+    def __init__(self, name: int,hashes: list):
         """Constructor"""
         self.name = name
-        self.fieldHash = []
+        self.fieldHash = hashes
 
 
 
 
 class Game:
     """Class for a Batleship Game"""
-    def __init__(self, title: str, firstPlayerId: int):
+    def __init__(self, title: str, firstPlayerId: int , hashes: list):
         """Constructor"""
         self.title = title
         self.players = []
-        newPlayer = Player(firstPlayerId) 
+        newPlayer = Player(firstPlayerId,hashes) 
         self.players.append(newPlayer.name)
         self.turn = []
         self.turn.append(firstPlayerId)
@@ -30,7 +30,7 @@ class Game:
         self.gameHasEnded = False
 
   
-    def addPlayer(self, player: int)->str:
+    def addPlayer(self, player: int,hashes: list)->str:
         if not self.gameHasEnded and (self.victoryClock == None or time.time() - self.victoryClock < time_to_proof_alive):
             
             if self.playerClaimedVictory != None:
@@ -41,7 +41,7 @@ class Game:
             if player in self.players:
                 return f"In the game '{self.title}': Player: '{player}' is already in the game."
             
-            newPlayer = Player(player) 
+            newPlayer = Player(player,hashes) 
             self.players.append(newPlayer.name)
             self.turn.append(player)
             self.hasReported[player] = True
@@ -169,18 +169,18 @@ class BatleshipGames:
         
 
 
-    def createGame(self, gametitle: str, player : int ) -> str:
+    def createGame(self, gametitle: str, player : int ,hashes: list) -> str:
         """Create a new game""" 
         # nao esquecer sender id
-        self.games[gametitle] = Game(gametitle,player)
+        self.games[gametitle] = Game(gametitle,player,hashes)
         
         return f"A new game called '{gametitle}' was created."
 
 
-    def joinGame(self, gametitle: str, player: int) -> str:
+    def joinGame(self, gametitle: str, player: int,hashes : list) -> str:
         """Join a game""" 
         if gametitle in self.games:
-            return self.games[gametitle].addPlayer(player)
+            return self.games[gametitle].addPlayer(player,hashes)
 
         return f"Game '{gametitle}' does not exist."
 

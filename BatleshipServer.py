@@ -1,5 +1,6 @@
 import socket
 import os
+import json
 import subprocess
 import shutil
 import time
@@ -91,6 +92,7 @@ class BatleshipServer:
             print(f"Error executing command: {e}")
             return False
             
+
     def shot_verifier(self):
         verify_command = f'zokrates verify -j {self.temp_dir}/proof.json -v {self.shot_proof_dir}/verification.key'
 
@@ -108,6 +110,7 @@ class BatleshipServer:
         except subprocess.CalledProcessError as e:
             print(f"Error executing command: {e}")
     
+
     def battle_ground_verifier(self):
         verify_command = f'zokrates verify -j {self.temp_dir}/proof.json -v {self.field_proof_dir}/verification.key'
 
@@ -139,9 +142,16 @@ class BatleshipServer:
 
         with open(f'{self.temp_dir}/proof.json','w') as f:
             f.write(note_data["fleet_position"])
+            
         
         if self.battle_ground_verifier():
-            print(self.battleship_games.createGame(note_data["game_id"],note_data["sender_id"]))
+            
+            with open(f'{self.temp_dir}/proof.json') as f:
+                proof = json.load(f)
+
+            proofHash = proof['inputs']
+
+            print(self.battleship_games.createGame(note_data["game_id"],note_data["sender_id"],proofHash))
             print("\n")
 
         os.remove(f'{self.temp_dir}/proof.json')
@@ -154,11 +164,19 @@ class BatleshipServer:
                 "game_id": args[1],
                 "fleet_proof": args[2]
             }
+        
         with open(f'{self.temp_dir}/proof.json','w') as f:
             f.write(note_data["fleet_proof"])
+            
 
         if self.battle_ground_verifier():
-            print(self.battleship_games.joinGame(note_data["game_id"],note_data["sender_id"]))
+            
+            with open(f'{self.temp_dir}/proof.json') as f:
+                proof = json.load(f)
+
+            proofHash = proof['inputs']
+
+            print(self.battleship_games.joinGame(note_data["game_id"],note_data["sender_id"],proofHash))
             print("\n")
 
         os.remove(f'{self.temp_dir}/proof.json')
