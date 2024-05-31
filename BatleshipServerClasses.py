@@ -1,5 +1,8 @@
 import time
 
+time_to_proof_alive = 30
+
+
 class Player:
     """Class for a Player"""  
     def __init__(self, name: int):
@@ -28,6 +31,9 @@ class Game:
 
   
     def addPlayer(self, player: int)->str:
+        if self.gameHasEnded:
+            return f"In the game '{self.title}': Game has ended. Player: '{player}' cannot join."
+
         """Add a player to the game"""
         newPlayer = Player(player) 
         self.players.append(newPlayer.name)
@@ -38,82 +44,107 @@ class Game:
 
     def fireShotInGame(self, shootingPlayer :  int, targettingPlayer: int, shotCoords: list) -> str:
         
-        """Verify is players actually exist"""
-        if shootingPlayer not in self.players or targettingPlayer not in self.players:
-            return f"In the game {self.title}: Shooting Player {shootingPlayer} or Targetting Player {targettingPlayer} does not exist in the game"
-        
-        """Verify if it is players turn"""
-        if shootingPlayer != self.turn[0]:
-            return f"In the game {self.title}: It is not Shooting Player: {shootingPlayer} turn "
+        if not self.gameHasEnded and (self.victoryClock == None or time.time() - self.victoryClock < time_to_proof_alive):
 
-        """Verify if shooting player is not shooting itself"""
-        if shootingPlayer == targettingPlayer:
-            return f"In the game {self.title}: Shooting Player: {shootingPlayer} cannot shoot itself"
-        
-        """Verify if shooting player has reported the last shot"""
-        if self.hasReported[shootingPlayer] == False:
-            return f"In the game {self.title}: Shooting Player: {shootingPlayer} has not reported the last shot"
-        
-        self.hasReported[shootingPlayer] = True
-        self.hasReported[targettingPlayer] = False
+            if self.playerClaimedVictory != None:
+                self.playerClaimedVictory = None
+                self.victoryClock = None
 
 
-        self.turn.append(self.turn[0])
-        self.turn.pop(0)
-        self.turn.remove(targettingPlayer)
-        self.turn.insert(0,targettingPlayer)
-        #Print whose turn is next
-        return f"In the game {self.title}: Shooting Player: {shootingPlayer} shot Targetting Player: {targettingPlayer} at x: {shotCoords[0]} and y: {shotCoords[1]}"
+            """Verify is players actually exist"""
+            if shootingPlayer not in self.players or targettingPlayer not in self.players:
+                return f"In the game {self.title}: Shooting Player {shootingPlayer} or Targetting Player {targettingPlayer} does not exist in the game"
+            
+            """Verify if it is players turn"""
+            if shootingPlayer != self.turn[0]:
+                return f"In the game {self.title}: It is not Shooting Player: {shootingPlayer} turn "
+
+            """Verify if shooting player is not shooting itself"""
+            if shootingPlayer == targettingPlayer:
+                return f"In the game {self.title}: Shooting Player: {shootingPlayer} cannot shoot itself"
+            
+            """Verify if shooting player has reported the last shot"""
+            if self.hasReported[shootingPlayer] == False:
+                return f"In the game {self.title}: Shooting Player: {shootingPlayer} has not reported the last shot"
+            
+            self.hasReported[shootingPlayer] = True
+            self.hasReported[targettingPlayer] = False
+
+
+            self.turn.append(self.turn[0])
+            self.turn.pop(0)
+            self.turn.remove(targettingPlayer)
+            self.turn.insert(0,targettingPlayer)
+            #Print whose turn is next
+            return f"In the game {self.title}: Shooting Player: {shootingPlayer} shot Targetting Player: {targettingPlayer} at x: {shotCoords[0]} and y: {shotCoords[1]}"
 
         
     def reportShotInGame(self, reportingPlayer: int, shootingPlayer: int, shotCoords: list, result: str)-> str :
+        if not self.gameHasEnded and (self.victoryClock == None or time.time() - self.victoryClock < time_to_proof_alive):
+            if self.playerClaimedVictory != None:
+                self.playerClaimedVictory = None
+                self.victoryClock = None
+            
+            if reportingPlayer not in self.players or shootingPlayer not in self.players:
+                return f"In the game {self.title}: Reporting Player {reportingPlayer} or Shooting Player {shootingPlayer} does not exist in the game"
+            
+            if reportingPlayer != self.turn[0]:
+                return f"In game {self.title}: It is not Reporting Player: {reportingPlayer} turn " 
 
-        if reportingPlayer not in self.players or shootingPlayer not in self.players:
-            return f"In the game {self.title}: Reporting Player {reportingPlayer} or Shooting Player {shootingPlayer} does not exist in the game"
-        
-        if reportingPlayer != self.turn[0]:
-            return f"In game {self.title}: It is not Reporting Player: {reportingPlayer} turn " 
+            if self.hasReported[reportingPlayer] == True:   
+                return f"In the game {self.title}: Reporting Player: {reportingPlayer} has already reported the last shot"
 
-        if self.hasReported[reportingPlayer] == True:   
-            return f"In the game {self.title}: Reporting Player: {reportingPlayer} has already reported the last shot"
-
-        self.hasReported[reportingPlayer] = True
-        return f"In the game {self.title}: Reporting Player: {reportingPlayer} is reporting a {result} at x: {shotCoords[0]} and y: {shotCoords[1]} from shot from Shooting Player: {shootingPlayer}"
+            self.hasReported[reportingPlayer] = True
+            return f"In the game {self.title}: Reporting Player: {reportingPlayer} is reporting a {result} at x: {shotCoords[0]} and y: {shotCoords[1]} from shot from Shooting Player: {shootingPlayer}"
+        else:
+            return f"In the game {self.title}: Game has ended."
 
     
     def waveTurnInGame(self, waveTurnPlayer: int)-> str:
-        if waveTurnPlayer not in self.players:
-                return f"In the game {self.title}: Player who wants to wave turn: {waveTurnPlayer} does not exist."
+        if not self.gameHasEnded:
+            if waveTurnPlayer not in self.players:
+                    return f"In the game {self.title}: Player who wants to wave turn: {waveTurnPlayer} does not exist."
 
-        if waveTurnPlayer != self.turn[0]:
-                return f"In the game {self.title}: Player: {waveTurnPlayer} cannot wave its turn because it is not their turn."
-            
-        if self.hasReported[waveTurnPlayer] == False:   
-            return f"In the game {self.title}: WaveTurning Player: {waveTurnPlayer} cannot wave its turn until it has reported the shot"
+            if waveTurnPlayer != self.turn[0]:
+                    return f"In the game {self.title}: Player: {waveTurnPlayer} cannot wave its turn because it is not their turn."
+                
+            if self.hasReported[waveTurnPlayer] == False:   
+                return f"In the game {self.title}: WaveTurning Player: {waveTurnPlayer} cannot wave its turn until it has reported the shot"
 
-        print(f"Player: '{waveTurnPlayer}' has decided to wave its turn")
-        self.turn.append(self.turn[0])
-        self.turn.pop(0)
-        return f"In the game {self.title}: It is Player : {self.turn[0]} turn."
+            print(f"Player: '{waveTurnPlayer}' has decided to wave its turn")
+            self.turn.append(self.turn[0])
+            self.turn.pop(0)
+            return f"In the game {self.title}: It is Player : {self.turn[0]} turn."
+        else:
+            return f"In the game {self.title}: Game has ended."
 
 
     def checkVcitoryClaim(self, claimVictoryPlayer:int )-> str:
-            self.playerClaimedVictory = claimVictoryPlayer
-            self.victoryClock = time.time() 
-            return f"In the game {self.title}: The Player : {claimVictoryPlayer} has claimed victory\n Players have 15s to proof they are alive."
+            if not self.gameHasEnded and (self.victoryClock == None or time.time() - self.victoryClock < time_to_proof_alive):
+                self.playerClaimedVictory = claimVictoryPlayer
+                self.victoryClock = time.time() 
+                return f"In the game {self.title}: The Player : {claimVictoryPlayer} has claimed victory\n Players have 15s to proof they are alive."
+            else:
+                return f"In the game {self.title}: Game has ended."
         
 
     def proof_alivness(self, player:int)-> str:
-        if self.playerClaimedVictory == None:
-            return f"In the game {self.title}: No player has claimed victory yet."
+        if not self.gameHasEnded:
+            if self.playerClaimedVictory == None:
+                return f"In the game {self.title}: No player has claimed victory yet."
 
-        if time.time() - self.victoryClock < 15:
-            self.victoryClock = None
-            self.playerClaimedVictory = None
-            return f"In the game {self.title}: Player : {player} has proved they are alive.\n Game will continue."   
-        
-        self.gameHasEnded = True
-        return f"In the game {self.title}: Player : {player} has won the game.\n Game has ended."
+            if self.playerClaimedVictory == player:
+                return f"In the game {self.title}: Player : {player} has claimed victory, so they cannot proof they are alive."
+
+            if time.time() - self.victoryClock < 15:
+                self.victoryClock = None
+                self.playerClaimedVictory = None
+                return f"In the game {self.title}: Player : {player} has proved they are alive.\n Game will continue."   
+            
+            self.gameHasEnded = True
+            return f"In the game {self.title}: Player : {player} has won the game.\n Game has ended."
+        else:
+            return f"In the game {self.title}: Game has ended."
 
 class BatleshipGames:
     """Class for a Batleship Games"""
