@@ -88,7 +88,7 @@ class BatleshipClient:
             direction = int(boat[2])
             boat_length = list(self.boats.values())[boat_counter]
             for j in range(boat_length):
-                self.field_map[x *10 + j * self.directions[direction][0] + y + j * self.directions[direction][1]] = self.field_map[x *10 + j * self.directions[direction][0] + y + j * self.directions[direction][1]] + 1
+                self.field_map[(x  + j * self.directions[direction][0]) * 10 + y + j * self.directions[direction][1]] = self.field_map[(x  + j * self.directions[direction][0]) * 10 + y + j * self.directions[direction][1]] + 1
 
             boat_counter += 1
         
@@ -174,7 +174,7 @@ class BatleshipClient:
         generate_proof_command = f'zokrates generate-proof -i {zokdir}/out -j {self.shot_proof_dir}/proof.json -p {zokdir}/proving.key -w {self.shot_proof_dir}/witness'
 
         #print(f"Executing command: {compute_witness_command}")
-        
+        executed_correctly = True
         print("Computing witness...")
 
         try:
@@ -185,32 +185,32 @@ class BatleshipClient:
             print(f"Error executing command: {e}")  
     
         #print(f"Executing command: {generate_proof_command}")
-        
-        print("Witness computed, generating proof...")
+        if executed_correctly:
+            print("Witness computed, generating proof...")
 
-        try:
+            try:
+                
+                #This cannot be like this, we need to check the output of the stdout to check if there was any problem
+
+                witness_file_path = f"{self.shot_proof_dir}/witness"
+
+                while not os.path.exists(witness_file_path):
+                    time.sleep(1)
+
+                generate_proof_process = subprocess.run(generate_proof_command, shell=True, check=True, capture_output=True)
+                #print(f"Output: {generate_proof_process.stdout.decode()}")
+            except subprocess.CalledProcessError as e:
+                print(f"Error executing command: {e}")          
             
-            #This cannot be like this, we need to check the output of the stdout to check if there was any problem
-
-            witness_file_path = f"{self.shot_proof_dir}/witness"
-
-            while not os.path.exists(witness_file_path):
-                time.sleep(1)
-
-            generate_proof_process = subprocess.run(generate_proof_command, shell=True, check=True, capture_output=True)
-            #print(f"Output: {generate_proof_process.stdout.decode()}")
-        except subprocess.CalledProcessError as e:
-            print(f"Error executing command: {e}")          
-        
-        self.field_map[int(x_guess) * 10 + int(y_guess)] = 0
+            self.field_map[int(x_guess) * 10 + int(y_guess)] = 0
 
 
-        with open(f'{self.shot_proof_dir}/proof.json') as f:
-            proof = json.load(f)
+            with open(f'{self.shot_proof_dir}/proof.json') as f:
+                proof = json.load(f)
 
-        proofHash = proof['inputs']
+            proofHash = proof['inputs']
 
-        self.hash.append(proofHash[3:])
+            self.hash.append(proofHash[3:])
 
         os.system("clear")
 
@@ -232,6 +232,7 @@ class BatleshipClient:
 
         #print(f"Executing command: {compute_witness_command}")
         
+        executed_correctly = True
         print("Computing witness...")
 
         try:
@@ -242,22 +243,22 @@ class BatleshipClient:
             print(f"Error executing command: {e}")  
     
         #print(f"Executing command: {generate_proof_command}")
-        
-        print("Witness computed, generating proof...")
+        if executed_correctly:
+            print("Witness computed, generating proof...")
 
-        try:
-            
-            #This cannot be like this, we need to check the output of the stdout to check if there was any problem
+            try:
+                
+                #This cannot be like this, we need to check the output of the stdout to check if there was any problem
 
-            witness_file_path = f"{self.alive_proof_dir}/witness"
+                witness_file_path = f"{self.alive_proof_dir}/witness"
 
-            while not os.path.exists(witness_file_path):
-                time.sleep(1)
+                while not os.path.exists(witness_file_path):
+                    time.sleep(1)
 
-            generate_proof_process = subprocess.run(generate_proof_command, shell=True, check=True, capture_output=True)
-            #print(f"Output: {generate_proof_process.stdout.decode()}")
-        except subprocess.CalledProcessError as e:
-            print(f"Error executing command: {e}")    
+                generate_proof_process = subprocess.run(generate_proof_command, shell=True, check=True, capture_output=True)
+                #print(f"Output: {generate_proof_process.stdout.decode()}")
+            except subprocess.CalledProcessError as e:
+                print(f"Error executing command: {e}")    
 
         os.system("clear")      
         
@@ -278,6 +279,8 @@ class BatleshipClient:
     def wave_turn(self):
         """Wave the turn"""
         self.send(f'wave${self.game_id}${self.player_id}')
+
+        os.system("clear")
 
 
     def fire_shot(self):
