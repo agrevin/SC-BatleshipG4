@@ -333,7 +333,10 @@ class BatleshipServer:
 
 if __name__ == '__main__':
     original_direct = os.getcwd()
-    #startSetup = LaunchProofSetup()
+    print("Do you want to compile and setup")
+    answer = input("1. Yes\n2. No\n")
+    if answer == "1":
+        startSetup = LaunchProofSetup()
     os.chdir(original_direct)
     server = BatleshipServer()
     server.connect()

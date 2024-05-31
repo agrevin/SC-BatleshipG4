@@ -32,6 +32,7 @@ class Game:
         newPlayer = Player(player) 
         self.players.append(newPlayer.name)
         self.turn.append(player)
+        self.hasReported[player] = True
         return f"In the game '{self.title}': the Player: '{newPlayer.name}' has joined."
 
 
