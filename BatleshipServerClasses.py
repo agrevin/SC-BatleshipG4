@@ -8,7 +8,7 @@ class Player:
     def __init__(self, name: int):
         """Constructor"""
         self.name = name
-        self.fieldHash = -1
+        self.fieldHash = []
 
 
 
@@ -38,6 +38,9 @@ class Game:
                 self.victoryClock = None
 
             """Add a player to the game"""
+            if player in self.players:
+                return f"In the game '{self.title}': Player: '{player}' is already in the game."
+            
             newPlayer = Player(player) 
             self.players.append(newPlayer.name)
             self.turn.append(player)
