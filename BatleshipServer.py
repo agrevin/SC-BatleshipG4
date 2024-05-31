@@ -102,7 +102,7 @@ class BatleshipServer:
             # Execute the compute-witness command
             verify_process = subprocess.run(verify_command, shell=True, check=True, capture_output=True)
             output_lines = verify_process.stdout.decode().splitlines()
-            print(f"Output: {verify_process.stdout.decode()}")
+            #print(f"Output: {verify_process.stdout.decode()}")
             if "PASSED" in output_lines[-1]:
                 return True
             else:
