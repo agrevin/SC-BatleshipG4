@@ -170,7 +170,7 @@ class BatleshipServer:
             
 
         if self.battle_ground_verifier():
-            
+
             with open(f'{self.temp_dir}/proof.json') as f:
                 proof = json.load(f)
 
@@ -217,7 +217,13 @@ class BatleshipServer:
             f.write(note_data["response_correct"])
         
         if self.shot_verifier():
-            print(self.battleship_games.reportShot(note_data["game_id"],note_data["sender_id"],note_data["shooter_id"],note_data["shot_coordinates"],note_data["shot_result"]))
+
+            with open(f'{self.temp_dir}/proof.json') as f:
+                proof = json.load(f)
+
+            proofHash = proof['inputs']
+
+            print(self.battleship_games.reportShot(note_data["game_id"],note_data["sender_id"],note_data["shooter_id"],note_data["shot_coordinates"],note_data["shot_result"],proofHash))
             print("\n")
 
         os.remove(f'{self.temp_dir}/proof.json')

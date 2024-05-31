@@ -20,6 +20,9 @@ class Game:
         self.title = title
         self.players = []
         newPlayer = Player(firstPlayerId,hashes) 
+        self.fullPlayers = {}
+        self.fullPlayers[newPlayer.name] = newPlayer
+
         self.players.append(newPlayer.name)
         self.turn = []
         self.turn.append(firstPlayerId)
@@ -42,6 +45,8 @@ class Game:
                 return f"In the game '{self.title}': Player: '{player}' is already in the game."
             
             newPlayer = Player(player,hashes) 
+            self.fullPlayers.append(newPlayer)
+
             self.players.append(newPlayer.name)
             self.turn.append(player)
             self.hasReported[player] = True
@@ -91,8 +96,9 @@ class Game:
             return f"In the game {self.title}: Game has ended."
 
         
-    def reportShotInGame(self, reportingPlayer: int, shootingPlayer: int, shotCoords: list, result: str)-> str :
+    def reportShotInGame(self, reportingPlayer: int, shootingPlayer: int, shotCoords: list, result: str,hashes : list)-> str :
         if not self.gameHasEnded and (self.victoryClock == None or time.time() - self.victoryClock < time_to_proof_alive):
+
             if self.playerClaimedVictory != None:
                 self.playerClaimedVictory = None
                 self.victoryClock = None
@@ -192,12 +198,12 @@ class BatleshipGames:
             return self.games[gametitle].fireShotInGame(shootingPlayer,targettingPlayer, shotCoords)
 
         
-    def reportShot(self, gametitle: str, reportingPlayer: int, shootingPlayer: int, shootCoords: list, result: str)-> str :
+    def reportShot(self, gametitle: str, reportingPlayer: int, shootingPlayer: int, shootCoords: list, result: str,hashes : list)-> str :
         
         """Report shot"""
 
         if gametitle in self.games:
-            return self.games[gametitle].reportShotInGame(reportingPlayer,shootingPlayer,shootCoords, result)
+            return self.games[gametitle].reportShotInGame(reportingPlayer,shootingPlayer,shootCoords, result,hashes)
         
      
     def waveTurn(self, gametitle: str, waveTurnPlayer: int)-> str:
